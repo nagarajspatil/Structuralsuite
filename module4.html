@@ -18,7 +18,10 @@
   </script>
   <style>
     .input-field { @apply w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-engineering-500 transition; }
-    .result-card { @apply bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 text-center; }
+    .result-card { @apply bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3.5 text-center; }
+    .shape-btn { @apply flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-center; }
+    .shape-btn-active { @apply border-orange-600 bg-orange-600 text-white shadow-sm; }
+    .shape-btn-inactive { @apply border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-orange-300; }
   </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
@@ -47,10 +50,12 @@
         <span class="text-3xl">🌀</span>
         <div>
           <p class="text-orange-300 text-sm font-medium">Module 4</p>
-          <h1 class="text-2xl md:text-3xl font-bold">Torsion Analyzer — Circular Shafts</h1>
+          <h1 class="text-2xl md:text-3xl font-bold">Torsion Analyzer — Civil & Structural Members</h1>
         </div>
       </div>
-      <p class="text-orange-200 text-sm max-w-2xl">Compute J, τmax, angle of twist, and torsional stiffness for solid or hollow circular shafts. Shear stress distribution across full diameter.</p>
+      <p class="text-orange-200 text-sm max-w-3xl leading-relaxed">
+        Compute torsional constant <span class="font-bold text-white font-mono">J</span>, maximum shear stress <span class="font-bold text-white font-mono">&tau;<sub>max</sub></span>, angle of twist <span class="font-bold text-white font-mono">&theta;</span>, and torsional stiffness <span class="font-bold text-white font-mono">GJ/L</span> for circular shafts, reinforced concrete rectangular beams, hollow bridge box girders, and structural steel I-beams.
+      </p>
     </div>
   </div>
 
@@ -63,32 +68,46 @@
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-4">
           <div class="flex items-center justify-between">
-            <h2 class="font-bold text-slate-900 dark:text-white">Shaft Configuration</h2>
+            <h2 class="font-bold text-slate-900 dark:text-white">Member Configuration</h2>
             <div class="flex gap-2">
               <button id="btnReset" class="text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-medium transition-colors">Reset</button>
               <button id="btnDownload" class="text-xs bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">Download</button>
             </div>
           </div>
 
-          <!-- Shaft type -->
+          <!-- Cross-Section Shape Selection -->
           <div>
-            <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Shaft Cross-Section</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button id="btnSolid" class="px-4 py-2 rounded-lg text-sm font-medium border-2 border-orange-600 bg-orange-600 text-white transition-all" onclick="setShaftType('solid')">⚫ Solid</button>
-              <button id="btnHollow" class="px-4 py-2 rounded-lg text-sm font-medium border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-orange-400 transition-all" onclick="setShaftType('hollow')">⭕ Hollow</button>
+            <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-2">Cross-Section Shape (Civil / Structural)</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <button id="btnShape_solid" class="shape-btn shape-btn-active" onclick="setCrossSection('solid')">
+                <span>⚫</span> Solid Circle
+              </button>
+              <button id="btnShape_hollow" class="shape-btn shape-btn-inactive" onclick="setCrossSection('hollow')">
+                <span>⭕</span> Hollow Pipe
+              </button>
+              <button id="btnShape_rectangle" class="shape-btn shape-btn-inactive" onclick="setCrossSection('rectangle')">
+                <span>🟩</span> RC Rectangle
+              </button>
+              <button id="btnShape_box" class="shape-btn shape-btn-inactive" onclick="setCrossSection('box')">
+                <span>🔲</span> Box Girder
+              </button>
+              <button id="btnShape_ibeam" class="shape-btn shape-btn-inactive col-span-2 sm:col-span-2" onclick="setCrossSection('ibeam')">
+                <span>🏗️</span> Steel I-Beam (ISMB)
+              </button>
             </div>
           </div>
 
-          <!-- Material -->
+          <!-- Material Selection -->
           <div>
             <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Material Preset</label>
             <select id="material" class="input-field">
               <option value="79.3">Structural Steel (75-80 GPa) — 79.3 GPa</option>
+              <option value="12.0">Concrete M25/M30 (10-15 GPa) — 12.0 GPa</option>
+              <option value="15.0">High-Strength Concrete (15-18 GPa) — 15.0 GPa</option>
               <option value="26.0">Aluminum Alloy (25-28 GPa) — 26.0 GPa</option>
+              <option value="1.0">Structural Timber (0.8-1.5 GPa) — 1.0 GPa</option>
               <option value="44.0">Titanium Alloy (40-45 GPa) — 44.0 GPa</option>
-              <option value="44.0_Cu">Copper (40-48 GPa) — 44.0 GPa</option>
               <option value="38.0">Bronze/Brass (35-40 GPa) — 38.0 GPa</option>
-              <option value="12.0">Concrete (10-15 GPa) — 12.0 GPa</option>
               <option value="custom">Custom (Enter G below)</option>
             </select>
           </div>
@@ -96,10 +115,10 @@
           <!-- G (locked unless Custom) -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Shear Modulus G (GPa) [1 – 150]</label>
+              <label class="text-xs font-medium text-slate-500 dark:text-slate-400">Shear Modulus G (GPa) [0.5 – 150]</label>
               <span id="gLockIcon" class="text-xs text-orange-600">🔒 Locked</span>
             </div>
-            <input type="number" id="shearModulus" value="79.3" min="1" max="150" step="0.1" class="input-field" disabled />
+            <input type="number" id="shearModulus" value="79.3" min="0.5" max="150" step="0.1" class="input-field" disabled />
             <div id="gWarning" class="hidden mt-1 text-xs text-amber-600 dark:text-amber-400"></div>
           </div>
 
@@ -115,17 +134,83 @@
             </div>
           </div>
 
-          <!-- Diameters -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Outer Diameter d₀ (mm)</label>
-              <input type="number" id="outerDia" value="100" step="1" min="1" class="input-field" />
-            </div>
-            <div>
-              <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Inner Diameter dᵢ (mm)</label>
-              <input type="number" id="innerDia" value="60" step="1" min="1" class="input-field" id-inner disabled />
+          <!-- DYNAMIC DIMENSIONS GROUPS -->
+
+          <!-- 1. Circular (Solid & Hollow) Inputs -->
+          <div id="dimGroup_circle" class="space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Outer Dia d₀ (mm)</label>
+                <input type="number" id="outerDia" value="100" step="1" min="1" class="input-field" />
+              </div>
+              <div id="innerDiaContainer">
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Inner Dia dᵢ (mm)</label>
+                <input type="number" id="innerDia" value="60" step="1" min="1" class="input-field" disabled />
+              </div>
             </div>
           </div>
+
+          <!-- 2. Solid Rectangular Beam Inputs -->
+          <div id="dimGroup_rectangle" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Width b (mm)</label>
+                <input type="number" id="rectWidth" value="250" step="5" min="10" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Depth h (mm)</label>
+                <input type="number" id="rectDepth" value="450" step="5" min="10" class="input-field" />
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 italic">Aspect ratio governs St. Venant warping coefficient and maximum shear stress at midpoint of longer face.</p>
+          </div>
+
+          <!-- 3. Hollow Box Girder Inputs -->
+          <div id="dimGroup_box" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Outer Width B (mm)</label>
+                <input type="number" id="boxWidth" value="600" step="10" min="50" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Outer Depth H (mm)</label>
+                <input type="number" id="boxDepth" value="400" step="10" min="50" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Web Thk t_w (mm)</label>
+                <input type="number" id="boxTw" value="40" step="1" min="2" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Flange Thk t_f (mm)</label>
+                <input type="number" id="boxTf" value="40" step="1" min="2" class="input-field" />
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 italic">Bredt's Thin-Walled Closed Section Theory: Enclosed centerline area Am generates continuous shear flow q = T/(2Am).</p>
+          </div>
+
+          <!-- 4. Steel I-Beam Inputs -->
+          <div id="dimGroup_ibeam" class="hidden space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Total Depth d (mm)</label>
+                <input type="number" id="ibeamDepth" value="300" step="5" min="20" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Flange Width b_f (mm)</label>
+                <input type="number" id="ibeamBf" value="150" step="5" min="20" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Flange Thk t_f (mm)</label>
+                <input type="number" id="ibeamTf" value="12" step="0.5" min="1" class="input-field" />
+              </div>
+              <div>
+                <label class="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">Web Thk t_w (mm)</label>
+                <input type="number" id="ibeamTw" value="8" step="0.5" min="1" class="input-field" />
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-400 italic">Open Thin-Walled Section: Flanges and web twist as uncoupled flat strips (J = 1/3 Σ bi ti³). High warping, low torsional rigidity.</p>
+          </div>
+
         </div>
 
         <!-- Error box -->
@@ -133,63 +218,105 @@
 
         <!-- Results -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 space-y-3">
-          <h2 class="font-bold text-slate-900 dark:text-white">Results</h2>
+          <div class="flex items-center justify-between">
+            <h2 class="font-bold text-slate-900 dark:text-white">Torsion Analysis Results</h2>
+            <span id="res_badge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-800 dark:text-orange-300">Solid Circle</span>
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div class="result-card">
-              <p class="text-xs text-slate-500 mb-1">J</p>
+              <p class="text-xs text-slate-500 mb-0.5">Torsional Constant (J)</p>
               <p id="res_J" class="text-sm font-bold font-mono text-orange-700 dark:text-orange-400">—</p>
-              <p class="text-xs text-slate-400">mm⁴</p>
+              <p class="text-[10px] text-slate-400">mm⁴</p>
             </div>
             <div class="result-card">
-              <p class="text-xs text-slate-500 mb-1">τ<sub>max</sub></p>
+              <p class="text-xs text-slate-500 mb-0.5">Max Shear Stress (τ<sub>max</sub>)</p>
               <p id="res_taumax" class="text-xl font-bold font-mono text-red-700 dark:text-red-400">—</p>
-              <p class="text-xs text-slate-400">MPa</p>
+              <p class="text-[10px] text-slate-400">MPa</p>
             </div>
-            <div id="tauMinCard" class="result-card hidden">
-              <p class="text-xs text-slate-500 mb-1">τ<sub>min</sub> (inner wall)</p>
-              <p id="res_taumin" class="text-xl font-bold font-mono text-orange-600 dark:text-orange-400">—</p>
-              <p class="text-xs text-slate-400">MPa</p>
+
+            <!-- Dynamic Secondary Stress / Flow Card -->
+            <div id="secStressCard" class="result-card hidden">
+              <p id="secStressTitle" class="text-xs text-slate-500 mb-0.5">Secondary Stress</p>
+              <p id="res_secStress" class="text-lg font-bold font-mono text-amber-600 dark:text-amber-400">—</p>
+              <p id="secStressUnit" class="text-[10px] text-slate-400">MPa</p>
             </div>
+
             <div class="result-card">
-              <p class="text-xs text-slate-500 mb-1">θ (angle of twist)</p>
-              <p id="res_theta_rad" class="text-sm font-bold font-mono text-engineering-700 dark:text-engineering-400">—</p>
-              <p class="text-xs text-slate-400">rad</p>
-              <p id="res_theta_deg" class="text-sm font-bold font-mono text-engineering-700 dark:text-engineering-400 mt-1">—</p>
-              <p class="text-xs text-slate-400">deg</p>
+              <p class="text-xs text-slate-500 mb-0.5">Angle of Twist (θ)</p>
+              <p id="res_theta_deg" class="text-lg font-bold font-mono text-engineering-700 dark:text-engineering-400">—</p>
+              <p class="text-[10px] text-slate-400">deg (<span id="res_theta_rad" class="font-mono text-slate-500">0.000 rad</span>)</p>
             </div>
-            <div class="result-card col-span-2">
-              <p class="text-xs text-slate-500 mb-1">Torsional Stiffness GJ/L</p>
+
+            <div id="stiffnessCard" class="result-card col-span-2">
+              <p class="text-xs text-slate-500 mb-0.5">Torsional Stiffness (GJ / L)</p>
               <p id="res_stiffness" class="text-xl font-bold font-mono text-green-700 dark:text-green-400">—</p>
-              <p class="text-xs text-slate-400">kN·m/rad</p>
+              <p class="text-[10px] text-slate-400">kN·m / rad</p>
+            </div>
+          </div>
+
+          <!-- Civil Engineering Insight Banner -->
+          <div class="p-3.5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-850 border border-amber-200 dark:border-amber-900/50">
+            <div class="flex items-center gap-1.5 mb-1.5">
+              <span class="text-base">🏗️</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">Civil & Structural Significance</h3>
+            </div>
+            <p id="res_civilContext" class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans"></p>
+          </div>
+        </div>
+
+        <!-- Step-by-Step Numerical Calculations Accordion -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button data-collapse-btn="stepsPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <span>🔢 Step-by-Step Calculations (J, τmax, θ, GJ/L)</span>
+            <svg class="chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="stepsPanel" class="hidden px-5 pb-5 space-y-2 text-xs">
+            <div id="stepsContent" class="space-y-2 font-mono"></div>
+          </div>
+        </div>
+
+        <!-- Theory & Formulas Accordion -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button data-collapse-btn="theoryPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <span>📚 Theory & Engineering Formulas</span>
+            <svg class="chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="theoryPanel" class="hidden px-5 pb-5 space-y-3 text-xs">
+            <div id="theoryContent" class="space-y-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
+              <div id="teq1"></div>
+              <div id="teq2"></div>
+              <div id="teq3"></div>
+              <div id="teq4"></div>
             </div>
           </div>
         </div>
 
-        <!-- Theory -->
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <button data-collapse-btn="theoryPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-            <span>📚 Theory & Formulas</span>
-            <svg class="chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          <div id="theoryPanel" class="hidden px-5 pb-5 space-y-2 text-xs">
-            <div class="space-y-2 bg-slate-50 dark:bg-slate-800 rounded-lg p-3">
-              <div id="teq1"></div><div id="teq2"></div><div id="teq3"></div><div id="teq4"></div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- RIGHT: Plots -->
       <div class="xl:col-span-3 space-y-4">
+        <!-- Plotly Plot -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-          <h2 class="font-bold text-slate-900 dark:text-white mb-3">Shear Stress Distribution Across Diameter</h2>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 id="plotMainTitle" class="font-bold text-slate-900 dark:text-white">Shear Stress Distribution</h2>
+              <p id="plotSubTitle" class="text-xs text-slate-500">Interactive stress variation across the member cross-section.</p>
+            </div>
+          </div>
           <div id="torsionPlot" class="w-full" style="height: 380px;"></div>
         </div>
+
+        <!-- 2D Canvas Diagram -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-          <h2 class="font-bold text-slate-900 dark:text-white mb-3">Cross-Section Stress Gradient</h2>
-          <canvas id="crossSectionCanvas" class="w-full" style="height:220px; max-height:220px;"></canvas>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="font-bold text-slate-900 dark:text-white">2D Cross-Section Stress Gradient & Geometry</h2>
+            <span class="text-xs text-slate-400">Elastic Shear Distribution</span>
+          </div>
+          <canvas id="crossSectionCanvas" class="w-full" style="height:260px; max-height:260px;"></canvas>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -205,8 +332,6 @@
   <script type="module">
     import { analyzeTorsion, validateShearModulus, MATERIAL_PRESETS } from './torsionAnalyzer.js';
 
-    const html = document.documentElement;
-
     // Collapsibles
     document.querySelectorAll('[data-collapse-btn]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -216,31 +341,95 @@
       });
     });
 
-    // KaTeX
-    [['teq1','J = \\frac{\\pi}{32}(d_o^4 - d_i^4)'],['teq2','\\tau(r) = \\frac{T \\cdot r}{J}'],['teq3','\\theta = \\frac{TL}{GJ}\\;(\\text{radians})'],['teq4','\\text{Stiffness} = \\frac{GJ}{L}']]
-      .forEach(([id, latex]) => { const el = document.getElementById(id); if(el) katex.render(latex, el, {throwOnError:false}); });
+    let activeShape = 'solid'; // 'solid' | 'hollow' | 'rectangle' | 'box' | 'ibeam'
 
-    let shaftType = 'solid';
+    const shapeButtons = ['solid', 'hollow', 'rectangle', 'box', 'ibeam'];
 
-    window.setShaftType = function(type) {
-      shaftType = type;
+    window.setCrossSection = function(shape) {
+      activeShape = shape;
+      shapeButtons.forEach(s => {
+        const btn = document.getElementById(`btnShape_${s}`);
+        if (!btn) return;
+        if (s === shape) {
+          btn.className = 'shape-btn shape-btn-active';
+        } else {
+          btn.className = 'shape-btn shape-btn-inactive';
+        }
+      });
+
+      // Show/hide relevant input groups
+      document.getElementById('dimGroup_circle').classList.toggle('hidden', shape !== 'solid' && shape !== 'hollow');
+      document.getElementById('dimGroup_rectangle').classList.toggle('hidden', shape !== 'rectangle');
+      document.getElementById('dimGroup_box').classList.toggle('hidden', shape !== 'box');
+      document.getElementById('dimGroup_ibeam').classList.toggle('hidden', shape !== 'ibeam');
+
+      // Adjust circular inner dia
       const innerDiaEl = document.getElementById('innerDia');
-      const tauMinCard = document.getElementById('tauMinCard');
-      if (type === 'solid') {
+      if (shape === 'solid') {
         innerDiaEl.disabled = true;
         innerDiaEl.parentElement.style.opacity = '0.4';
-        tauMinCard.classList.add('hidden');
-        document.getElementById('btnSolid').className = 'px-4 py-2 rounded-lg text-sm font-medium border-2 border-orange-600 bg-orange-600 text-white transition-all';
-        document.getElementById('btnHollow').className = 'px-4 py-2 rounded-lg text-sm font-medium border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-orange-400 transition-all';
-      } else {
+      } else if (shape === 'hollow') {
         innerDiaEl.disabled = false;
         innerDiaEl.parentElement.style.opacity = '1';
-        tauMinCard.classList.remove('hidden');
-        document.getElementById('btnHollow').className = 'px-4 py-2 rounded-lg text-sm font-medium border-2 border-orange-600 bg-orange-600 text-white transition-all';
-        document.getElementById('btnSolid').className = 'px-4 py-2 rounded-lg text-sm font-medium border-2 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-orange-400 transition-all';
       }
+
+      // Default material presets tailored to the civil shape if default was active
+      const matSelect = document.getElementById('material');
+      if (shape === 'rectangle' && matSelect.value === '79.3') {
+        matSelect.value = '12.0';
+        document.getElementById('shearModulus').value = '12.0';
+      } else if ((shape === 'solid' || shape === 'ibeam') && matSelect.value === '12.0') {
+        matSelect.value = '79.3';
+        document.getElementById('shearModulus').value = '79.3';
+      }
+
+      updateTheoryFormulas(shape);
       update();
     };
+
+    function updateTheoryFormulas(shape) {
+      let formulas = [];
+      if (shape === 'solid') {
+        formulas = [
+          ['teq1', 'J = \\frac{\\pi}{32} d_o^4'],
+          ['teq2', '\\tau(r) = \\frac{T \\cdot r}{J}, \\quad \\tau_{\\max} = \\frac{T \\cdot (d_o/2)}{J}'],
+          ['teq3', '\\theta = \\frac{T L}{G J}\\;(\\text{radians}) = \\frac{180}{\\pi} \\frac{T L}{G J}\\;(\\text{deg})'],
+          ['teq4', '\\text{Torsional Stiffness } K_T = \\frac{G J}{L}\\;(\\text{kN}\\cdot\\text{m/rad})'],
+        ];
+      } else if (shape === 'hollow') {
+        formulas = [
+          ['teq1', 'J = \\frac{\\pi}{32} (d_o^4 - d_i^4)'],
+          ['teq2', '\\tau_{\\max} = \\frac{T \\cdot r_o}{J}, \\quad \\tau_{\\min} = \\frac{T \\cdot r_i}{J}'],
+          ['teq3', '\\theta = \\frac{T L}{G J}, \\quad K_T = \\frac{G J}{L}'],
+          ['teq4', '\\text{Wall Shear Stress Linear Between } r_i \\text{ and } r_o'],
+        ];
+      } else if (shape === 'rectangle') {
+        formulas = [
+          ['teq1', 'J = d \\cdot w^3 \\left[ \\frac{1}{3} - 0.21\\frac{w}{d}\\left(1 - \\frac{w^4}{12d^4}\\right) \\right], \\quad (d \\ge w)'],
+          ['teq2', '\\tau_{\\max} = \\frac{T (3d + 1.8w)}{w^2 d^2} \\quad (\\text{at midpoint of longer face } d)'],
+          ['teq3', '\\tau_{\\text{corners}} = 0 \\quad (\\text{corners are stress-free due to outer boundary conditions})'],
+          ['teq4', '\\theta = \\frac{T L}{G J}, \\quad K_T = \\frac{G J}{L}\\;(\\text{St. Venant Warping Torsion})'],
+        ];
+      } else if (shape === 'box') {
+        formulas = [
+          ['teq1', 'A_m = (B - t_w)(H - t_f) \\quad (\\text{Bredt enclosed centerline area})'],
+          ['teq2', 'J = \\frac{4 A_m^2}{\\oint \\frac{ds}{t}} = \\frac{4 A_m^2}{2\\left( \\frac{B - t_w}{t_f} + \\frac{H - t_f}{t_w} \\right)}'],
+          ['teq3', 'q = \\frac{T}{2 A_m} \\;(\\text{Shear flow}), \\quad \\tau = \\frac{q}{t} = \\frac{T}{2 A_m t}'],
+          ['teq4', '\\theta = \\frac{T L}{G J}, \\quad K_T = \\frac{G J}{L}\\;(\\text{Bredt-Batho Closed Theory})'],
+        ];
+      } else if (shape === 'ibeam') {
+        formulas = [
+          ['teq1', 'J = \\frac{1}{3} \\sum b_i t_i^3 = \\frac{1}{3} \\left[ 2 b_f t_f^3 + (d - 2t_f) t_w^3 \\right]'],
+          ['teq2', '\\tau_{\\max} = \\frac{T \\cdot \\max(t_f, t_w)}{J} \\quad (\\text{at surface of thicker element})'],
+          ['teq3', '\\tau_{\\text{flange}} = \\frac{T t_f}{J}, \\quad \\tau_{\\text{web}} = \\frac{T t_w}{J}'],
+          ['teq4', '\\theta = \\frac{T L}{G J}\\;(\\text{Open thin-walled: negligible } J; \\text{ susceptible to LTB})'],
+        ];
+      }
+      formulas.forEach(([id, latex]) => {
+        const el = document.getElementById(id);
+        if (el) katex.render(latex, el, { throwOnError: false });
+      });
+    }
 
     // Material selection
     document.getElementById('material').addEventListener('change', e => {
@@ -261,9 +450,17 @@
       update();
     });
 
-    // All inputs → update
-    ['shearModulus','torqueInput','lengthInput','outerDia','innerDia'].forEach(id => {
-      document.getElementById(id).addEventListener('input', debounce(update, 200));
+    // Inputs listener
+    const inputIds = [
+      'shearModulus','torqueInput','lengthInput',
+      'outerDia','innerDia',
+      'rectWidth','rectDepth',
+      'boxWidth','boxDepth','boxTw','boxTf',
+      'ibeamDepth','ibeamBf','ibeamTf','ibeamTw'
+    ];
+    inputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', debounce(update, 200));
     });
 
     function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
@@ -286,27 +483,250 @@
 
       const T = parseFloat(document.getElementById('torqueInput').value) || 5;
       const L = parseFloat(document.getElementById('lengthInput').value) || 2;
-      const do_mm = parseFloat(document.getElementById('outerDia').value) || 100;
-      const di_mm = parseFloat(document.getElementById('innerDia').value) || 60;
+
+      let dimObj = {};
+      if (activeShape === 'solid' || activeShape === 'hollow') {
+        dimObj = {
+          do: parseFloat(document.getElementById('outerDia').value) || 100,
+          di: parseFloat(document.getElementById('innerDia').value) || 60,
+        };
+      } else if (activeShape === 'rectangle') {
+        dimObj = {
+          b: parseFloat(document.getElementById('rectWidth').value) || 250,
+          h: parseFloat(document.getElementById('rectDepth').value) || 450,
+        };
+      } else if (activeShape === 'box') {
+        dimObj = {
+          B: parseFloat(document.getElementById('boxWidth').value) || 600,
+          H: parseFloat(document.getElementById('boxDepth').value) || 400,
+          tw: parseFloat(document.getElementById('boxTw').value) || 40,
+          tf: parseFloat(document.getElementById('boxTf').value) || 40,
+        };
+      } else if (activeShape === 'ibeam') {
+        dimObj = {
+          d: parseFloat(document.getElementById('ibeamDepth').value) || 300,
+          bf: parseFloat(document.getElementById('ibeamBf').value) || 150,
+          tf: parseFloat(document.getElementById('ibeamTf').value) || 12,
+          tw: parseFloat(document.getElementById('ibeamTw').value) || 8,
+        };
+      }
 
       let result;
       try {
-        result = analyzeTorsion(shaftType, T, L, G_clamped, do_mm, di_mm);
+        result = analyzeTorsion(activeShape, T, L, G_clamped, dimObj);
       } catch(e) {
-        errBox.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded-xl p-4 text-sm">${e.message}</div>`;
+        errBox.innerHTML = `<div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded-xl p-4 text-sm font-medium">⚠️ ${e.message}</div>`;
         return;
       }
 
-      const f = (n, d = 2) => parseFloat(n.toFixed(d)).toString();
+      const f = (n, d = 2) => (n === null || n === undefined) ? '—' : parseFloat(n.toFixed(d)).toString();
+      document.getElementById('res_badge').textContent = result.shapeName.split('(')[0].trim();
       document.getElementById('res_J').textContent = result.J_mm4.toExponential(3);
       document.getElementById('res_taumax').textContent = f(result.tauMax, 2);
-      document.getElementById('res_taumin').textContent = f(result.tauMin, 2);
-      document.getElementById('res_theta_rad').textContent = result.thetaRad.toFixed(6);
+      document.getElementById('res_theta_rad').textContent = result.thetaRad.toFixed(6) + ' rad';
       document.getElementById('res_theta_deg').textContent = f(result.thetaDeg, 4) + '°';
       document.getElementById('res_stiffness').textContent = f(result.torsionalStiffness, 2);
+      document.getElementById('res_civilContext').textContent = result.civilContext;
 
+      // Handle secondary stress card
+      const secCard = document.getElementById('secStressCard');
+      const secTitle = document.getElementById('secStressTitle');
+      const secVal = document.getElementById('res_secStress');
+      const secUnit = document.getElementById('secStressUnit');
+      const stiffCard = document.getElementById('stiffnessCard');
+
+      if (activeShape === 'hollow') {
+        secCard.classList.remove('hidden');
+        secTitle.textContent = 'Inner Wall τ_min';
+        secVal.textContent = f(result.tauMin, 2);
+        secUnit.textContent = 'MPa';
+        stiffCard.className = 'result-card col-span-2 sm:col-span-1';
+      } else if (activeShape === 'rectangle') {
+        secCard.classList.remove('hidden');
+        secTitle.textContent = 'Short Face Midpoint τ';
+        secVal.textContent = f(result.tauMin, 2);
+        secUnit.textContent = 'MPa (corners: 0 MPa)';
+        stiffCard.className = 'result-card col-span-2 sm:col-span-1';
+      } else if (activeShape === 'box') {
+        secCard.classList.remove('hidden');
+        secTitle.textContent = 'Shear Flow q / Web τ';
+        secVal.textContent = `${f(result.shearFlow_kNm, 2)} kN/m | ${f(result.tauWeb, 1)} MPa`;
+        secUnit.textContent = `(Flange τ = ${f(result.tauFlange, 1)} MPa)`;
+        stiffCard.className = 'result-card col-span-2 sm:col-span-1';
+      } else if (activeShape === 'ibeam') {
+        secCard.classList.remove('hidden');
+        secTitle.textContent = 'Flange / Web τ';
+        secVal.textContent = `${f(result.tauFlange, 1)} / ${f(result.tauWeb, 1)}`;
+        secUnit.textContent = 'MPa (Flange / Web)';
+        stiffCard.className = 'result-card col-span-2 sm:col-span-1';
+      } else {
+        secCard.classList.add('hidden');
+        stiffCard.className = 'result-card col-span-2';
+      }
+
+      document.getElementById('plotMainTitle').textContent = result.plotTitle;
       drawPlot(result);
       drawCrossSection(result);
+      renderStepByStep(result, T, L, G_clamped);
+    }
+
+    function renderStepByStep(result, T, L, G_clamped) {
+      const container = document.getElementById('stepsContent');
+      if (!container) return;
+
+      const f = (n, d = 3) => (n === null || n === undefined) ? '—' : parseFloat(n.toFixed(d)).toString();
+      const T_Nm = T * 1e3;
+      const G_Pa = G_clamped * 1e9;
+      let html = '';
+
+      if (result.shapeType === 'solid') {
+        const do_m = result.geom.do_mm / 1e3;
+        const ro_m = result.ro_mm / 1e3;
+        html += `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-orange-700 dark:text-orange-400">Step 1: Polar Moment of Inertia (J)</p>
+            <p class="text-slate-600 dark:text-slate-300">d₀ = ${result.geom.do_mm} mm = ${do_m} m</p>
+            <p>J = (π / 32) · d₀⁴ = (π / 32) · (${do_m})⁴</p>
+            <p class="font-semibold text-slate-900 dark:text-white">J = <strong>${result.J_m4.toExponential(4)} m⁴</strong> = <strong>${result.J_mm4.toExponential(4)} mm⁴</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Maximum Shear Stress (τmax)</p>
+            <p class="text-slate-600 dark:text-slate-300">T = ${T} kN·m = ${T_Nm} N·m, r₀ = ${result.ro_mm} mm = ${ro_m} m</p>
+            <p>τmax = (T · r₀) / J = (${T_Nm} · ${ro_m}) / ${result.J_m4.toExponential(4)}</p>
+            <p class="font-semibold text-slate-900 dark:text-white">τmax = <strong>${f(result.tauMax, 2)} MPa</strong> (at outer radius r₀)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 3: Angle of Twist (θ)</p>
+            <p class="text-slate-600 dark:text-slate-300">L = ${L} m, G = ${G_clamped} GPa = ${G_Pa.toExponential(2)} Pa</p>
+            <p>θ = (T · L) / (G · J) = (${T_Nm} · ${L}) / (${G_Pa.toExponential(2)} · ${result.J_m4.toExponential(4)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">θ = <strong>${result.thetaRad.toFixed(6)} rad</strong> = <strong>${f(result.thetaDeg, 4)}°</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Torsional Stiffness (KT = GJ / L)</p>
+            <p>KT = (G · J) / L = (${G_Pa.toExponential(2)} · ${result.J_m4.toExponential(4)}) / ${L}</p>
+            <p class="font-semibold text-slate-900 dark:text-white">KT = <strong>${f(result.torsionalStiffness, 2)} kN·m/rad</strong></p>
+          </div>`;
+      } else if (result.shapeType === 'hollow') {
+        const do_m = result.geom.do_mm / 1e3;
+        const di_m = result.geom.di_mm / 1e3;
+        const ro_m = result.ro_mm / 1e3;
+        const ri_m = result.ri_mm / 1e3;
+        html += `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-orange-700 dark:text-orange-400">Step 1: Polar Moment of Inertia (J)</p>
+            <p class="text-slate-600 dark:text-slate-300">d₀ = ${result.geom.do_mm} mm, dᵢ = ${result.geom.di_mm} mm</p>
+            <p>J = (π / 32) · (d₀⁴ − dᵢ⁴) = (π / 32) · [(${do_m})⁴ − (${di_m})⁴]</p>
+            <p class="font-semibold text-slate-900 dark:text-white">J = <strong>${result.J_m4.toExponential(4)} m⁴</strong> = <strong>${result.J_mm4.toExponential(4)} mm⁴</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Outer & Inner Shear Stresses</p>
+            <p>τmax = (T · r₀) / J = (${T_Nm} · ${ro_m}) / ${result.J_m4.toExponential(4)} = <strong>${f(result.tauMax, 2)} MPa</strong> (at outer wall)</p>
+            <p>τmin = (T · rᵢ) / J = (${T_Nm} · ${ri_m}) / ${result.J_m4.toExponential(4)} = <strong>${f(result.tauMin, 2)} MPa</strong> (at inner wall)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 3: Angle of Twist (θ)</p>
+            <p>θ = (T · L) / (G · J) = (${T_Nm} · ${L}) / (${G_Pa.toExponential(2)} · ${result.J_m4.toExponential(4)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">θ = <strong>${result.thetaRad.toFixed(6)} rad</strong> = <strong>${f(result.thetaDeg, 4)}°</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Torsional Stiffness (KT = GJ / L)</p>
+            <p>KT = (G · J) / L = <strong>${f(result.torsionalStiffness, 2)} kN·m/rad</strong></p>
+          </div>`;
+      } else if (result.shapeType === 'rectangle') {
+        const { w_mm, d_mm, ratio } = result.geom;
+        const w_m = w_mm / 1e3;
+        const d_m = d_mm / 1e3;
+        const beta = result.J_m4 / (d_m * (w_m ** 3));
+        html += `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-orange-700 dark:text-orange-400">Step 1: St. Venant Torsional Constant (J)</p>
+            <p class="text-slate-600 dark:text-slate-300">w = min(b, h) = ${w_mm} mm = ${w_m} m, d = max(b, h) = ${d_mm} mm = ${d_m} m</p>
+            <p>Aspect Ratio d / w = ${ratio.toFixed(2)}</p>
+            <p>β = [1/3 − 0.21(w/d)(1 − w⁴ / 12d⁴)] = ${beta.toFixed(4)}</p>
+            <p>J = β · d · w³ = ${beta.toFixed(4)} · ${d_m} · (${w_m})³</p>
+            <p class="font-semibold text-slate-900 dark:text-white">J = <strong>${result.J_m4.toExponential(4)} m⁴</strong> = <strong>${result.J_mm4.toExponential(4)} mm⁴</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Maximum Shear Stress (τmax) & Warping Behavior</p>
+            <p>τmax = T(3d + 1.8w) / (w² · d²) = (${T_Nm} · [3·${d_m} + 1.8·${w_m}]) / (${w_m}² · ${d_m}²)</p>
+            <p class="font-semibold text-slate-900 dark:text-white">τmax = <strong>${f(result.tauMax, 2)} MPa</strong> (at midpoint of wider face)</p>
+            <p class="text-slate-600 dark:text-slate-300">τ(midpoint of shorter face) = <strong>${f(result.tauMin, 2)} MPa</strong></p>
+            <p class="text-slate-500 italic">Corner stress = 0.00 MPa (surfaces meet at 90°, boundary shear vanishes)</p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 3: Angle of Twist (θ)</p>
+            <p>θ = (T · L) / (G · J) = (${T_Nm} · ${L}) / (${G_Pa.toExponential(2)} · ${result.J_m4.toExponential(4)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">θ = <strong>${result.thetaRad.toFixed(6)} rad</strong> = <strong>${f(result.thetaDeg, 4)}°</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Torsional Stiffness (KT = GJ / L)</p>
+            <p>KT = (G · J) / L = <strong>${f(result.torsionalStiffness, 2)} kN·m/rad</strong></p>
+          </div>`;
+      } else if (result.shapeType === 'box') {
+        const { B_mm, H_mm, tw_mm, tf_mm, bMid_mm, hMid_mm, Am_m2 } = result.geom;
+        const bMid_m = bMid_mm / 1e3;
+        const hMid_m = hMid_mm / 1e3;
+        const tw_m = tw_mm / 1e3;
+        const tf_m = tf_mm / 1e3;
+        const ds_t = 2 * (bMid_m / tf_m + hMid_m / tw_m);
+        html += `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-orange-700 dark:text-orange-400">Step 1: Bredt Enclosed Area & Torsional Constant (J)</p>
+            <p class="text-slate-600 dark:text-slate-300">Centerline dimensions: b_mid = B − tw = ${bMid_mm} mm, h_mid = H − tf = ${hMid_mm} mm</p>
+            <p>Enclosed Mean Area Am = b_mid · h_mid = ${bMid_m} · ${hMid_m} = <strong>${Am_m2.toFixed(4)} m²</strong></p>
+            <p>∮ ds/t = 2 · (b_mid/tf + h_mid/tw) = ${ds_t.toFixed(2)}</p>
+            <p>J = 4·Am² / ∮(ds/t) = (4 · ${Am_m2.toFixed(4)}²) / ${ds_t.toFixed(2)}</p>
+            <p class="font-semibold text-slate-900 dark:text-white">J = <strong>${result.J_m4.toExponential(4)} m⁴</strong> = <strong>${result.J_mm4.toExponential(4)} mm⁴</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Shear Flow (q) & Wall Shear Stresses</p>
+            <p>q = T / (2 · Am) = ${T_Nm} / (2 · ${Am_m2.toFixed(4)}) = <strong>${(result.shearFlow_kNm * 1e3).toFixed(1)} N/m</strong> = <strong>${f(result.shearFlow_kNm, 2)} kN/m</strong></p>
+            <p>τ_web = q / tw = (${(result.shearFlow_kNm * 1e3).toFixed(1)}) / ${tw_m} = <strong>${f(result.tauWeb, 2)} MPa</strong></p>
+            <p>τ_flange = q / tf = (${(result.shearFlow_kNm * 1e3).toFixed(1)}) / ${tf_m} = <strong>${f(result.tauFlange, 2)} MPa</strong></p>
+            <p class="font-semibold text-slate-900 dark:text-white">τmax = max(τ_web, τ_flange) = <strong>${f(result.tauMax, 2)} MPa</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 3: Angle of Twist (θ)</p>
+            <p>θ = (T · L) / (G · J) = (${T_Nm} · ${L}) / (${G_Pa.toExponential(2)} · ${result.J_m4.toExponential(4)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">θ = <strong>${result.thetaRad.toFixed(6)} rad</strong> = <strong>${f(result.thetaDeg, 4)}°</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Torsional Stiffness (KT = GJ / L)</p>
+            <p>KT = (G · J) / L = <strong>${f(result.torsionalStiffness, 2)} kN·m/rad</strong></p>
+          </div>`;
+      } else if (result.shapeType === 'ibeam') {
+        const { d_mm, bf_mm, tf_mm, tw_mm, hw_mm } = result.geom;
+        const bf_m = bf_mm / 1e3;
+        const tf_m = tf_mm / 1e3;
+        const tw_m = tw_mm / 1e3;
+        const hw_m = hw_mm / 1e3;
+        const tMax_m = Math.max(tf_m, tw_m);
+        html += `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-orange-700 dark:text-orange-400">Step 1: Open Thin-Walled Torsional Constant (J)</p>
+            <p class="text-slate-600 dark:text-slate-300">Clear web height hw = d − 2·tf = ${hw_mm} mm = ${hw_m} m</p>
+            <p>J = (1/3) · ∑ (b_i · t_i³) = (1/3) · [2 · bf · tf³ + hw · tw³]</p>
+            <p>J = (1/3) · [2 · ${bf_m} · (${tf_m})³ + ${hw_m} · (${tw_m})³]</p>
+            <p class="font-semibold text-slate-900 dark:text-white">J = <strong>${result.J_m4.toExponential(4)} m⁴</strong> = <strong>${result.J_mm4.toExponential(4)} mm⁴</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Maximum Shear Stress (τmax)</p>
+            <p>τmax occurs at the surface of the thicker plate element (t_max = ${Math.max(tf_mm, tw_mm)} mm = ${tMax_m} m)</p>
+            <p>τmax = (T · t_max) / J = (${T_Nm} · ${tMax_m}) / ${result.J_m4.toExponential(4)}</p>
+            <p class="font-semibold text-slate-900 dark:text-white">τmax = <strong>${f(result.tauMax, 2)} MPa</strong></p>
+            <p class="text-slate-600 dark:text-slate-300">τ_flange = ${f(result.tauFlange, 2)} MPa, τ_web = ${f(result.tauWeb, 2)} MPa</p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 3: Angle of Twist (θ)</p>
+            <p>θ = (T · L) / (G · J) = (${T_Nm} · ${L}) / (${G_Pa.toExponential(2)} · ${result.J_m4.toExponential(4)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">θ = <strong>${result.thetaRad.toFixed(6)} rad</strong> = <strong>${f(result.thetaDeg, 4)}°</strong></p>
+          </div>
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Torsional Stiffness (KT = GJ / L)</p>
+            <p>KT = (G · J) / L = <strong>${f(result.torsionalStiffness, 2)} kN·m/rad</strong></p>
+          </div>`;
+      }
+      container.innerHTML = html;
     }
 
     function drawPlot(result) {
@@ -315,39 +735,55 @@
       const gridColor = isDark ? '#334155' : '#e2e8f0';
       const textColor = isDark ? '#94a3b8' : '#475569';
 
-      const { rPlot_mm, tauPlot, ro_mm, ri_mm } = result;
-
       const traces = [
-        { type:'scatter', mode:'lines', x: rPlot_mm, y: tauPlot,
-          line:{color:'#f97316', width:2.5}, name:'τ(r) — Shear Stress' },
-        { type:'scatter', mode:'none', x: rPlot_mm, y: tauPlot, fill:'tozeroy',
-          fillcolor: isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.12)', showlegend:false },
+        {
+          type: 'scatter',
+          mode: 'lines',
+          x: result.rPlot_mm,
+          y: result.tauPlot,
+          line: { color: '#f97316', width: 2.5 },
+          name: 'τ — Shear Stress',
+        },
+        {
+          type: 'scatter',
+          mode: 'none',
+          x: result.rPlot_mm,
+          y: result.tauPlot,
+          fill: 'tozeroy',
+          fillcolor: isDark ? 'rgba(249,115,22,0.15)' : 'rgba(249,115,22,0.12)',
+          showlegend: false,
+        },
       ];
 
       // τmax annotation
-      const tauMaxAnnotation = { x: ro_mm, y: result.tauMax, text: `<b>τmax=${result.tauMax.toFixed(2)} MPa</b>`,
-        xref:'x', yref:'y', showarrow:true, arrowhead:2, arrowcolor:'#ef4444', font:{color:'#ef4444', size:11}, bgcolor: isDark?'#3b1515':'#fef2f2' };
-
-      if (result.isHollow) {
-        traces.push({ type:'scatter', mode:'markers', x:[ri_mm, -ri_mm], y:[result.tauMin, -result.tauMin],
-          marker:{size:8, color:'#f59e0b'}, name:`τmin=${result.tauMin.toFixed(2)} MPa` });
-      }
+      const maxIdx = result.tauPlot.indexOf(Math.max(...result.tauPlot));
+      const annX = result.rPlot_mm[maxIdx] !== undefined ? result.rPlot_mm[maxIdx] : 0;
+      const annotations = [{
+        x: annX,
+        y: result.tauMax,
+        text: `<b>τmax = ${result.tauMax.toFixed(2)} MPa</b>`,
+        xref: 'x', yref: 'y',
+        showarrow: true, arrowhead: 2, arrowcolor: '#ef4444',
+        font: { color: '#ef4444', size: 11 },
+        bgcolor: isDark ? '#3b1515' : '#fef2f2',
+      }];
 
       Plotly.react('torsionPlot', traces, {
-        paper_bgcolor:bg, plot_bgcolor:bg,
-        font:{family:'Inter, sans-serif', color:textColor},
-        xaxis:{gridcolor:gridColor, zeroline:true, zerolinecolor:textColor, title:'Radial Position r (mm)'},
-        yaxis:{gridcolor:gridColor, zeroline:true, zerolinecolor:textColor, title:'Shear Stress τ (MPa)'},
-        annotations:[tauMaxAnnotation],
-        legend:{bgcolor: isDark?'#1e293b':'#f8fafc', borderwidth:1},
-        margin:{t:20, b:50, l:65, r:20},
-      }, {responsive:true});
+        paper_bgcolor: bg,
+        plot_bgcolor: bg,
+        font: { family: 'Inter, sans-serif', color: textColor },
+        xaxis: { gridcolor: gridColor, zeroline: true, zerolinecolor: textColor, title: result.plotXTitle },
+        yaxis: { gridcolor: gridColor, zeroline: true, zerolinecolor: textColor, title: 'Shear Stress τ (MPa)' },
+        annotations,
+        legend: { bgcolor: isDark ? '#1e293b' : '#f8fafc', borderwidth: 1 },
+        margin: { t: 25, b: 50, l: 65, r: 25 },
+      }, { responsive: true });
     }
 
     function drawCrossSection(result) {
       const canvas = document.getElementById('crossSectionCanvas');
       const W = canvas.offsetWidth || 400;
-      const H = 220;
+      const H = 260;
       canvas.width = W;
       canvas.height = H;
       const ctx = canvas.getContext('2d');
@@ -358,60 +794,169 @@
       ctx.fillRect(0, 0, W, H);
 
       const cx = W / 2, cy = H / 2;
-      const scale = Math.min(W, H) * 0.38 / result.ro_mm;
-      const roC = result.ro_mm * scale;
-      const riC = result.ri_mm * scale;
 
-      // Gradient fill
-      const grad = ctx.createRadialGradient(cx, cy, riC, cx, cy, roC);
-      grad.addColorStop(0, isDark ? 'rgba(249,115,22,0.1)' : 'rgba(249,115,22,0.05)');
-      grad.addColorStop(1, isDark ? 'rgba(249,115,22,0.7)' : 'rgba(249,115,22,0.6)');
+      if (result.shapeType === 'solid' || result.shapeType === 'hollow') {
+        const scale = Math.min(W, H) * 0.38 / result.ro_mm;
+        const roC = result.ro_mm * scale;
+        const riC = (result.ri_mm || 0) * scale;
 
-      // Draw cross-section
-      ctx.beginPath();
-      ctx.arc(cx, cy, roC, 0, 2 * Math.PI);
-      if (result.isHollow) {
-        ctx.arc(cx, cy, riC, 0, 2 * Math.PI, true);
-      }
-      ctx.fillStyle = grad;
-      ctx.fill();
+        // Gradient
+        const grad = ctx.createRadialGradient(cx, cy, riC, cx, cy, roC);
+        grad.addColorStop(0, 'rgba(249,115,22,0.08)');
+        grad.addColorStop(1, 'rgba(249,115,22,0.7)');
 
-      // Outline
-      ctx.beginPath();
-      ctx.arc(cx, cy, roC, 0, 2 * Math.PI);
-      ctx.strokeStyle = '#f97316';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      if (result.isHollow) {
         ctx.beginPath();
-        ctx.arc(cx, cy, riC, 0, 2 * Math.PI);
+        ctx.arc(cx, cy, roC, 0, 2 * Math.PI);
+        if (result.isHollow) {
+          ctx.arc(cx, cy, riC, 0, 2 * Math.PI, true);
+        }
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, roC, 0, 2 * Math.PI);
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        if (result.isHollow) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, riC, 0, 2 * Math.PI);
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`τmax = ${result.tauMax.toFixed(2)} MPa`, cx, cy - roC - 10);
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.fillText(`d₀ = ${result.ro_mm * 2} mm${result.isHollow ? ` | dᵢ = ${result.ri_mm * 2} mm` : ''}`, cx, cy + roC + 16);
+
+      } else if (result.shapeType === 'rectangle') {
+        const { b_mm, h_mm } = result.geom;
+        const maxDim = Math.max(b_mm, h_mm);
+        const scale = (Math.min(W, H) * 0.7) / maxDim;
+        const bw = b_mm * scale;
+        const bh = h_mm * scale;
+        const x0 = cx - bw / 2;
+        const y0 = cy - bh / 2;
+
+        // Draw rectangle
+        const grad = ctx.createLinearGradient(x0, cy, cx, cy);
+        grad.addColorStop(0, 'rgba(249,115,22,0.85)');
+        grad.addColorStop(1, 'rgba(249,115,22,0.15)');
+
+        ctx.fillStyle = '#fed7aa';
+        ctx.fillRect(x0, y0, bw, bh);
+
+        // Highlight mid-edges where stress is concentrated
+        ctx.fillStyle = 'rgba(234, 88, 12, 0.4)';
+        // Midpoints of edges
+        ctx.fillRect(x0, y0 + bh * 0.2, 8, bh * 0.6);
+        ctx.fillRect(x0 + bw - 8, y0 + bh * 0.2, 8, bh * 0.6);
+        ctx.fillRect(x0 + bw * 0.2, y0, bw * 0.6, 8);
+        ctx.fillRect(x0 + bw * 0.2, y0 + bh - 8, bw * 0.6, 8);
+
+        ctx.strokeStyle = '#c2410c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x0, y0, bw, bh);
+
+        // Corner zero-stress annotations
+        ctx.fillStyle = '#475569';
+        ctx.font = '9px Inter, sans-serif';
+        ctx.fillText('τ=0', x0 - 10, y0 - 3);
+        ctx.fillText('τ=0', x0 + bw + 10, y0 - 3);
+
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`τmax = ${result.tauMax.toFixed(2)} MPa (Midpoint of long side)`, cx, y0 - 12);
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.fillText(`b = ${b_mm} mm × h = ${h_mm} mm (RC Beam)`, cx, y0 + bh + 16);
+
+      } else if (result.shapeType === 'box') {
+        const { B_mm, H_mm, tw_mm, tf_mm } = result.geom;
+        const maxDim = Math.max(B_mm, H_mm);
+        const scale = (Math.min(W, H) * 0.72) / maxDim;
+        const Bw = B_mm * scale;
+        const Bh = H_mm * scale;
+        const twC = tw_mm * scale;
+        const tfC = tf_mm * scale;
+        const x0 = cx - Bw / 2;
+        const y0 = cy - Bh / 2;
+
+        // Shaded wall
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.55)';
+        ctx.fillRect(x0, y0, Bw, Bh);
+        ctx.fillStyle = isDark ? '#0f172a' : '#ffffff';
+        ctx.fillRect(x0 + twC, y0 + tfC, Bw - 2 * twC, Bh - 2 * tfC);
+
+        ctx.strokeStyle = '#c2410c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x0, y0, Bw, Bh);
         ctx.strokeStyle = '#94a3b8';
         ctx.lineWidth = 1.5;
-        ctx.stroke();
+        ctx.strokeRect(x0 + twC, y0 + tfC, Bw - 2 * twC, Bh - 2 * tfC);
+
+        // Circulating shear flow arrows
+        ctx.fillStyle = '#c2410c';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('→ q', cx, y0 + tfC * 0.85);
+        ctx.fillText('↓ q', x0 + Bw - twC * 0.5, cy + 4);
+        ctx.fillText('← q', cx, y0 + Bh - tfC * 0.15);
+        ctx.fillText('↑ q', x0 + twC * 0.5, cy + 4);
+
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.fillText(`Shear Flow q = ${result.shearFlow_kNm.toFixed(2)} kN/m | τmax = ${result.tauMax.toFixed(2)} MPa`, cx, y0 - 12);
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.fillText(`B=${B_mm}mm, H=${H_mm}mm, tw=${tw_mm}mm, tf=${tf_mm}mm (Box Girder)`, cx, y0 + Bh + 16);
+
+      } else if (result.shapeType === 'ibeam') {
+        const { d_mm, bf_mm, tf_mm, tw_mm } = result.geom;
+        const maxDim = Math.max(d_mm, bf_mm);
+        const scale = (Math.min(W, H) * 0.72) / maxDim;
+        const dC = d_mm * scale;
+        const bfC = bf_mm * scale;
+        const tfC = Math.max(tf_mm * scale, 4);
+        const twC = Math.max(tw_mm * scale, 3);
+        const x0 = cx - bfC / 2;
+        const y0 = cy - dC / 2;
+
+        ctx.fillStyle = 'rgba(249, 115, 22, 0.6)';
+        // Top flange
+        ctx.fillRect(x0, y0, bfC, tfC);
+        // Bottom flange
+        ctx.fillRect(x0, y0 + dC - tfC, bfC, tfC);
+        // Web
+        ctx.fillRect(cx - twC / 2, y0 + tfC, twC, dC - 2 * tfC);
+
+        ctx.strokeStyle = '#c2410c';
+        ctx.lineWidth = 1.5;
+        // Top flange outline
+        ctx.strokeRect(x0, y0, bfC, tfC);
+        // Bottom flange outline
+        ctx.strokeRect(x0, y0 + dC - tfC, bfC, tfC);
+        // Web outline
+        ctx.strokeRect(cx - twC / 2, y0 + tfC, twC, dC - 2 * tfC);
+
+        ctx.fillStyle = '#ea580c';
+        ctx.font = 'bold 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`τmax = ${result.tauMax.toFixed(2)} MPa (Thin-Walled Open Section)`, cx, y0 - 12);
+        ctx.fillStyle = '#475569';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.fillText(`d=${d_mm}mm, bf=${bf_mm}mm, tf=${tf_mm}mm, tw=${tw_mm}mm (Steel ISMB)`, cx, y0 + dC + 16);
       }
-
-      // Labels
-      ctx.fillStyle = isDark ? '#f97316' : '#ea580c';
-      ctx.font = 'bold 11px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`τmax=${result.tauMax.toFixed(1)} MPa`, cx + roC * 0.7, cy - roC * 0.5);
-
-      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
-      ctx.font = '10px Inter, sans-serif';
-      ctx.fillText(`d₀ = ${result.ro_mm * 2} mm`, cx, cy + roC + 18);
-      if (result.isHollow) {
-        ctx.fillText(`dᵢ = ${result.ri_mm * 2} mm`, cx, cy + roC + 30);
-      }
-
-      // Center dot
-      ctx.beginPath();
-      ctx.arc(cx, cy, 3, 0, 2 * Math.PI);
-      ctx.fillStyle = isDark ? '#94a3b8' : '#475569';
-      ctx.fill();
     }
 
-    // Reset
+    // Reset button
     document.getElementById('btnReset').addEventListener('click', () => {
       document.getElementById('material').value = '79.3';
       document.getElementById('shearModulus').value = 79.3;
@@ -421,14 +966,26 @@
       document.getElementById('lengthInput').value = 2;
       document.getElementById('outerDia').value = 100;
       document.getElementById('innerDia').value = 60;
-      setShaftType('solid');
+      document.getElementById('rectWidth').value = 250;
+      document.getElementById('rectDepth').value = 450;
+      document.getElementById('boxWidth').value = 600;
+      document.getElementById('boxDepth').value = 400;
+      document.getElementById('boxTw').value = 40;
+      document.getElementById('boxTf').value = 40;
+      document.getElementById('ibeamDepth').value = 300;
+      document.getElementById('ibeamBf').value = 150;
+      document.getElementById('ibeamTf').value = 12;
+      document.getElementById('ibeamTw').value = 8;
+      setCrossSection('solid');
     });
 
-    // Download
+    // Download button
     document.getElementById('btnDownload').addEventListener('click', () => {
-      Plotly.downloadImage('torsionPlot', {format:'png', filename:'torsion_stress', width:1200, height:700});
+      Plotly.downloadImage('torsionPlot', { format: 'png', filename: 'torsion_stress_analysis', width: 1200, height: 750 });
     });
 
+    // Initialize
+    updateTheoryFormulas('solid');
     update();
   </script>
 </body>

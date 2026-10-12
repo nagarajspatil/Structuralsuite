@@ -104,6 +104,25 @@ describe('Force System Analyzer', () => {
     const r = analyzeForces([{ mag: 100, angle: 270, x: 0, y: 0 }]);
     expect(r.resAngle).toBeCloseTo(270, 1);
   });
+
+  test("Varignon's Theorem: Lever arm and moment wrt Force 1", () => {
+    // F1: 100N at (2, 1) angle 30°
+    // F2: 150N at (-1, 3) angle 120°
+    // F3: 80N at (1, -2) angle 240°
+    const r = analyzeForces([
+      { mag: 100, angle: 30, x: 2, y: 1 },
+      { mag: 150, angle: 120, x: -1, y: 3 },
+      { mag: 80, angle: 240, x: 1, y: -2 },
+    ]);
+    expect(r.varignon).toBeDefined ? true : expect(r.varignon !== null).toBe(true);
+    // MA = sum of moments about F1 application point (2, 1)
+    // MA = MO - (x1*Fy - y1*Fx) = -40.788383 - (2 * 110.621778 - 1 * (-28.397460))
+    // x1*Fy - y1*Fx = 221.243556 + 28.397460 = 249.641016
+    // MA = -40.788383 - 249.641016 = -290.429399 Nm
+    expect(r.varignon.sumMA).toBeCloseTo(-290.4294, 2);
+    // d_perp = |MA| / |R| = 290.4294 / 114.2086 = 2.54297 m
+    expect(r.varignon.dPerp).toBeCloseTo(2.543, 2);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -239,6 +258,34 @@ describe('Torsion Analyzer', () => {
     const J = (Math.PI / 32) * (0.1 ** 4);
     const expected = (79.3e9 * J) / 2 / 1e3;
     expect(r.torsionalStiffness).toBeCloseTo(expected, 0);
+  });
+
+  test('Civil Rectangular Beam: St. Venant J and tauMax', () => {
+    const r = analyzeTorsion('rectangle', 5, 2, 12.0, 200, 400);
+    // b = 0.2, h = 0.4, w = 0.2, d = 0.4
+    const w = 0.2, d = 0.4;
+    const expectedJ = d * (w ** 3) * (1/3 - 0.21 * (w/d) * (1 - (w**4)/(12 * (d**4)))) * 1e12;
+    expect(r.J_mm4).toBeCloseTo(expectedJ, -2);
+    const expectedTau = (5e3 * (3*d + 1.8*w) / ((w**2) * (d**2))) / 1e6;
+    expect(r.tauMax).toBeCloseTo(expectedTau, 2);
+  });
+
+  test('Civil Box Girder: Bredt formula J and shear flow', () => {
+    const r = analyzeTorsion('box', 50, 10, 14.0, 600, 400, 40, 40);
+    const bMid = 0.6 - 0.04, hMid = 0.4 - 0.04;
+    const Am = bMid * hMid;
+    const ds_t = 2 * (bMid / 0.04 + hMid / 0.04);
+    const expectedJ = (4 * (Am ** 2) / ds_t) * 1e12;
+    expect(r.J_mm4).toBeCloseTo(expectedJ, -2);
+    const expectedQ = (50e3 / (2 * Am)) / 1e3; // kN/m
+    expect(r.shearFlow_kNm).toBeCloseTo(expectedQ, 2);
+  });
+
+  test('Civil Steel I-Beam: Open section thin-walled torsion', () => {
+    const r = analyzeTorsion('ibeam', 2, 3, 79.3, 300, 150, 12, 8);
+    const hw = 0.3 - 2 * 0.012;
+    const expectedJ = (1/3) * (2 * 0.15 * (0.012 ** 3) + hw * (0.008 ** 3)) * 1e12;
+    expect(r.J_mm4).toBeCloseTo(expectedJ, -2);
   });
 });
 
