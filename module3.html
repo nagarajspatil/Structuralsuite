@@ -152,6 +152,17 @@
         <!-- Analyze button -->
         <button id="btnAnalyze" class="btn-primary w-full py-3 text-base rounded-xl">⚙️ Analyze Beam</button>
 
+        <!-- Step-by-Step Calculations Accordion -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button data-collapse-btn="stepsPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <span>🔢 Step-by-Step Calculations (Equilibrium & Reactions)</span>
+            <svg class="chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="stepsPanel" class="hidden px-5 pb-5 space-y-2 text-xs">
+            <div id="stepsContent" class="space-y-2 font-mono">Run analysis to see step-by-step equilibrium calculations.</div>
+          </div>
+        </div>
+
         <!-- Theory -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <button data-collapse-btn="theoryPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -219,7 +230,7 @@
   </footer>
 
   <script type="module">
-    import { calculateBeamComplete, findContraflexure, validateBeamInputs } from './beamAnalyzer.js';
+    import { calculateBeamComplete, findContraflexure, validateBeamInputs, totalForceAndMoment } from './beamAnalyzer.js';
 
     // Collapsibles
     document.querySelectorAll('[data-collapse-btn]').forEach(btn => {
@@ -432,6 +443,116 @@
         bmTraces.push({ type:'scatter', mode:'markers', x: cps, y: cps.map(()=>0), marker:{size:10, color:'#16a34a', symbol:'circle'}, name:'Contraflexure' });
       }
       Plotly.react('bmdPlot', bmTraces, { ...baseLayout, yaxis:{...baseLayout.xaxis, title:'Bending Moment (kN·m)'}, annotations: bmAnnotations, legend:{bgcolor: isDark?'#1e293b':'#f8fafc', borderwidth:1} }, {responsive:true});
+
+      renderStepByStep(L, st, aPos, bPos, pointLoads, udls, uvls, reactions, maxSF, minSF, maxBM, minBM, xMaxSF, xMinSF, xMaxBM, xMinBM, cps);
+    }
+
+    function renderStepByStep(L, st, aPos, bPos, pointLoads, udls, uvls, reactions, maxSF, minSF, maxBM, minBM, xMaxSF, xMinSF, xMaxBM, xMinBM, cps) {
+      const container = document.getElementById('stepsContent');
+      if (!container) return;
+
+      const f = (n, d = 3) => parseFloat(n.toFixed(d)).toString();
+      const { F, M0 } = totalForceAndMoment(L, pointLoads, udls, uvls);
+
+      // Breakdown of applied loads
+      let loadList = [];
+      pointLoads.forEach(([P, a], idx) => {
+        loadList.push(`Point Load P${idx+1}: ${P} kN @ x = ${a} m (Moment about x=0: ${(P*a).toFixed(2)} kN·m)`);
+      });
+      udls.forEach(([w, l1, l2], idx) => {
+        const span = l2 - l1;
+        const totalW = w * span;
+        const xCentroid = (l1 + l2) / 2;
+        loadList.push(`UDL w${idx+1}: ${w} kN/m from ${l1}m to ${l2}m (Total: ${f(totalW)} kN @ centroid x=${f(xCentroid)}m, Moment: ${f(totalW * xCentroid)} kN·m)`);
+      });
+      uvls.forEach(([w1, w2, l1, l2], idx) => {
+        const span = l2 - l1;
+        const rectLoad = Math.min(w1, w2) * span;
+        const triLoad = 0.5 * Math.abs(w2 - w1) * span;
+        loadList.push(`UVL ${idx+1}: ${w1} → ${w2} kN/m from ${l1}m to ${l2}m (Total: ${f(rectLoad + triLoad)} kN)`);
+      });
+
+      let stepEquilibrium = '';
+      if (st === '1') {
+        const Rb = reactions['Rb (Roller)'] || 0;
+        const Ra = reactions['Ra (Hinge)'] || 0;
+        stepEquilibrium = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 2: Static Equilibrium Equations (Simply Supported)</p>
+            <p class="text-slate-600 dark:text-slate-300"><strong>Taking Moment about Support A (x = 0):</strong> Σ M_A = 0</p>
+            <p class="text-slate-600 dark:text-slate-300">Rb · L − M₀ = 0 &nbsp;⟹&nbsp; Rb · (${L}) = ${f(M0)} kN·m</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Rb = M₀ / L = ${f(M0)} / ${L} = <strong>${f(Rb)} kN</strong> (Upward)</p>
+            <p class="text-slate-600 dark:text-slate-300 mt-2"><strong>Vertical Force Equilibrium:</strong> Σ F_y = 0</p>
+            <p class="text-slate-600 dark:text-slate-300">Ra + Rb − Σ F_applied = 0 &nbsp;⟹&nbsp; Ra + ${f(Rb)} − ${f(F)} = 0</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Ra = ${f(F)} − ${f(Rb)} = <strong>${f(Ra)} kN</strong> (Upward)</p>
+          </div>
+        `;
+      } else if (st === '2') {
+        const Ra = reactions['Ra (Fixed)'] || 0;
+        const Ma = reactions['Ma (Fixed-end moment, hogging)'] || 0;
+        stepEquilibrium = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 2: Static Equilibrium Equations (Cantilever at x = 0)</p>
+            <p class="text-slate-600 dark:text-slate-300"><strong>Vertical Force Equilibrium:</strong> Σ F_y = 0</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Ra = Σ F_applied = <strong>${f(Ra)} kN</strong> (Upward)</p>
+            <p class="text-slate-600 dark:text-slate-300 mt-2"><strong>Moment Equilibrium at Fixed Support x = 0:</strong> Σ M_A = 0</p>
+            <p class="font-semibold text-slate-900 dark:text-white">M_fixed = M₀ = <strong>${f(Ma)} kN·m</strong> (Hogging / Counter-clockwise clamp)</p>
+          </div>
+        `;
+      } else if (st === '3') {
+        const Ra = reactions['Ra (Fixed)'] || 0;
+        const Rb = reactions['Rb (Roller)'] || 0;
+        const Ma = reactions['Ma (Fixed-end moment, hogging)'] || 0;
+        stepEquilibrium = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 2: Consistent Deformation & Compatibility (Propped Cantilever)</p>
+            <p class="text-slate-600 dark:text-slate-300">Indeterminate to degree 1. Compatibility condition at propped tip B (x = L): Δ_B = 0.</p>
+            <p class="text-slate-600 dark:text-slate-300">Downward deflection due to loads = Upward deflection due to prop Rb (Rb·L³ / 3EI).</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Rb = <strong>${f(Rb)} kN</strong></p>
+            <p class="text-slate-600 dark:text-slate-300 mt-1">Σ F_y = 0 ⟹ Ra = Σ F − Rb = ${f(F)} − ${f(Rb)} = <strong>${f(Ra)} kN</strong></p>
+            <p class="text-slate-600 dark:text-slate-300">Σ M_A = 0 ⟹ M_fixed = M₀ − Rb·L = ${f(M0)} − (${f(Rb)} · ${L}) = <strong>${f(Ma)} kN·m</strong></p>
+          </div>
+        `;
+      } else {
+        const Ra = reactions['Ra (Hinge)'] || 0;
+        const Rb = reactions['Rb (Roller)'] || 0;
+        const dist = bPos - aPos;
+        stepEquilibrium = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 2: Overhanging Beam Equilibrium (Supports @ a = ${aPos}m, b = ${bPos}m)</p>
+            <p class="text-slate-600 dark:text-slate-300"><strong>Moment about Support A (x = ${aPos}m):</strong> Σ M_A = 0</p>
+            <p class="text-slate-600 dark:text-slate-300">M_about_A = M₀ − Σ F · a = ${f(M0)} − (${f(F)} · ${aPos}) = ${f(M0 - F * aPos)} kN·m</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Rb · (${dist}m) = ${f(M0 - F * aPos)} ⟹ Rb = <strong>${f(Rb)} kN</strong></p>
+            <p class="text-slate-600 dark:text-slate-300 mt-1"><strong>Vertical Equilibrium:</strong> Σ F_y = 0</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Ra = Σ F − Rb = ${f(F)} − ${f(Rb)} = <strong>${f(Ra)} kN</strong></p>
+          </div>
+        `;
+      }
+
+      container.innerHTML = `
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-slate-800 dark:text-slate-200">Step 1: Total Applied Downward Load & Moment about Origin (x = 0)</p>
+          <div class="text-slate-600 dark:text-slate-300 text-[11px] space-y-0.5">
+            ${loadList.length > 0 ? loadList.map(item => `<div>• ${item}</div>`).join('') : '<div>• No external loads applied</div>'}
+          </div>
+          <p class="font-semibold text-slate-900 dark:text-white pt-1">Σ F_applied = <strong>${f(F)} kN</strong> &nbsp;|&nbsp; Moment about x=0 (M₀) = <strong>${f(M0)} kN·m</strong></p>
+        </div>
+
+        ${stepEquilibrium}
+
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-blue-700 dark:text-blue-400">Step 3: Critical Shear Forces (SFD Extremes)</p>
+          <p class="text-slate-600 dark:text-slate-300">Maximum Shear Force V_max = <strong>${f(maxSF)} kN</strong> at x = ${f(xMaxSF)} m</p>
+          <p class="text-slate-600 dark:text-slate-300">Minimum Shear Force V_min = <strong>${f(minSF)} kN</strong> at x = ${f(xMinSF)} m</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-red-700 dark:text-red-400">Step 4: Critical Bending Moments & Contraflexure (BMD Extremes)</p>
+          <p class="text-slate-600 dark:text-slate-300">Maximum Sagging Moment M_max = <strong>${f(maxBM)} kN·m</strong> at x = ${f(xMaxBM)} m (where V(x) crosses 0)</p>
+          <p class="text-slate-600 dark:text-slate-300">Maximum Hogging Moment M_min = <strong>${f(minBM)} kN·m</strong> at x = ${f(xMinBM)} m</p>
+          <p class="text-slate-600 dark:text-slate-300">Points of Contraflexure (M(x) = 0): <strong>${cps.length > 0 ? cps.map(c => `x = ${f(c)} m`).join(', ') : 'None along span'}</strong></p>
+        </div>
+      `;
     }
 
     function drawBeamIllustration(L, st, aPos, bPos, pLoads, udls, uvls, isDark, plotBg, textColor, gridColor) {

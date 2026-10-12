@@ -142,6 +142,17 @@
           </div>
         </div>
 
+        <!-- Step-by-Step Numerical Calculations Accordion -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button data-collapse-btn="stepsPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <span>🔢 Step-by-Step Calculations (σ_avg, R, σ1, σ2, τ_max, θp, ε)</span>
+            <svg class="chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="stepsPanel" class="hidden px-5 pb-5 space-y-2 text-xs">
+            <div id="stepsContent" class="space-y-2 font-mono"></div>
+          </div>
+        </div>
+
         <!-- Theory -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <button data-collapse-btn="theoryPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -238,6 +249,59 @@
 
       drawStressElement(sx, sy, txy);
       drawMohrsCircle(r);
+      renderStepByStep(sx, sy, txy, E, nu, r);
+    }
+
+    function renderStepByStep(sx, sy, txy, E, nu, r) {
+      const container = document.getElementById('stepsContent');
+      if (!container) return;
+
+      const f = (n, d = 3) => parseFloat(n.toFixed(d)).toString();
+      const diffHalf = (sx - sy) / 2;
+      const diffHalfSq = diffHalf ** 2;
+      const txySq = txy ** 2;
+
+      let html = `
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 1: Average Normal Stress (σ_avg / Center C)</p>
+          <p class="text-slate-600 dark:text-slate-300">σ_avg = (σx + σy) / 2 = (${sx} + ${sy}) / 2</p>
+          <p class="font-semibold text-slate-900 dark:text-white">σ_avg = <strong>${f(r.sigmaAvg)} MPa</strong></p>
+          <p class="text-[11px] text-slate-500">Center of Mohr's Circle C = (${f(r.sigmaAvg)}, 0)</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-orange-700 dark:text-orange-400">Step 2: Mohr's Circle Radius (R) & Max Shear Stress (τ_max)</p>
+          <p class="text-slate-600 dark:text-slate-300">R = √[ ((σx − σy) / 2)² + τxy² ]</p>
+          <p class="text-slate-600 dark:text-slate-300">R = √[ (${sx} − ${sy} / 2)² + (${txy})² ] = √[ (${f(diffHalf)})² + ${f(txySq)} ]</p>
+          <p class="text-slate-600 dark:text-slate-300">R = √[ ${f(diffHalfSq)} + ${f(txySq)} ] = √[ ${f(diffHalfSq + txySq)} ]</p>
+          <p class="font-semibold text-slate-900 dark:text-white">Radius R = <strong>${f(r.radius)} MPa</strong></p>
+          <p class="font-semibold text-amber-700 dark:text-amber-400">τ_max = R = <strong>${f(r.tauMax)} MPa</strong></p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-red-700 dark:text-red-400">Step 3: Principal Normal Stresses (σ₁ & σ₂)</p>
+          <p class="text-slate-600 dark:text-slate-300">σ₁ = σ_avg + R = ${f(r.sigmaAvg)} + ${f(r.radius)} = <strong>${f(r.sigma1)} MPa</strong> (Major Principal Stress)</p>
+          <p class="text-slate-600 dark:text-slate-300">σ₂ = σ_avg − R = ${f(r.sigmaAvg)} − ${f(r.radius)} = <strong>${f(r.sigma2)} MPa</strong> (Minor Principal Stress)</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-indigo-700 dark:text-indigo-400">Step 4: Principal Angle (θp)</p>
+          <p class="text-slate-600 dark:text-slate-300">tan(2θp) = 2τxy / (σx − σy) = (2 · ${txy}) / (${sx} − ${sy}) = ${f(2 * txy)} / ${f(sx - sy)}</p>
+          <p class="text-slate-600 dark:text-slate-300">2θp = atan2(${f(2 * txy)}, ${f(sx - sy)}) = ${f(2 * r.thetaP, 2)}°</p>
+          <p class="font-semibold text-slate-900 dark:text-white">θp = <strong>${f(r.thetaP, 2)}°</strong> (counterclockwise from x-axis)</p>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+          <p class="font-bold text-green-700 dark:text-green-400">Step 5: Principal Strains (ε₁ & ε₂) in Plane Stress</p>
+          <p class="text-slate-600 dark:text-slate-300">E = ${E} MPa, ν = ${nu}</p>
+          <p class="text-slate-600 dark:text-slate-300">ε₁ = (1 / E) · [σ₁ − ν·σ₂] = (1 / ${E}) · [${f(r.sigma1)} − (${nu} · ${f(r.sigma2)})]</p>
+          <p class="font-semibold text-slate-900 dark:text-white">ε₁ = <strong>${r.epsilon1.toExponential(4)}</strong></p>
+          <p class="text-slate-600 dark:text-slate-300">ε₂ = (1 / E) · [σ₂ − ν·σ₁] = (1 / ${E}) · [${f(r.sigma2)} − (${nu} · ${f(r.sigma1)})]</p>
+          <p class="font-semibold text-slate-900 dark:text-white">ε₂ = <strong>${r.epsilon2.toExponential(4)}</strong></p>
+        </div>
+      `;
+
+      container.innerHTML = html;
     }
 
     function drawStressElement(sx, sy, txy) {

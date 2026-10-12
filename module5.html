@@ -166,6 +166,17 @@
           <canvas id="sectionSketch" class="w-full" style="height:200px;max-height:200px;"></canvas>
         </div>
 
+        <!-- Step-by-Step Numerical Calculations Accordion -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <button data-collapse-btn="stepsPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+            <span>🔢 Step-by-Step Calculations (I, σ_max, Q, τ_max)</span>
+            <svg class="chevron w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="stepsPanel" class="hidden px-5 pb-5 space-y-2 text-xs">
+            <div id="stepsContent" class="space-y-2 font-mono"></div>
+          </div>
+        </div>
+
         <!-- Theory -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <button data-collapse-btn="theoryPanel" class="w-full flex items-center justify-between px-5 py-4 text-left font-semibold text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -287,6 +298,157 @@
 
       drawPlots(result);
       drawSectionSketch(result);
+      renderStepByStep(currentSection, M, V, result);
+    }
+
+    function renderStepByStep(sectionType, M_kNm, V_kN, result) {
+      const container = document.getElementById('stepsContent');
+      if (!container) return;
+
+      const f = (n, d = 3) => parseFloat(n.toFixed(d)).toString();
+      const M_Nmm = M_kNm * 1e6;
+      const V_N = V_kN * 1e3;
+      const I_mm4 = result.I;
+      const I_m4 = I_mm4 * 1e-12;
+      const maxSigma = Math.max(...result.bendingStress.map(Math.abs));
+      const maxTau = Math.max(...result.shearStress);
+
+      let step1 = '', step2 = '', step3 = '', step4 = '';
+
+      if (sectionType === 'Rectangular') {
+        const b = parseFloat(document.getElementById('b_rect').value) || 150;
+        const h = parseFloat(document.getElementById('h_rect').value) || 300;
+        const yTop = h / 2;
+        const Q_na = (b * h * h) / 8; // Q at neutral axis = (b/2)*(h^2/4) = b*h^2 / 8
+
+        step1 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 1: Moment of Inertia (I_xx)</p>
+            <p class="text-slate-600 dark:text-slate-300">b = ${b} mm, h = ${h} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">I = (b · h³) / 12 = (${b} · ${h}³) / 12</p>
+            <p class="font-semibold text-slate-900 dark:text-white">I = <strong>${I_mm4.toExponential(4)} mm⁴</strong> = <strong>${I_m4.toExponential(4)} m⁴</strong></p>
+          </div>
+        `;
+
+        step2 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Maximum Bending Stress (σ_max)</p>
+            <p class="text-slate-600 dark:text-slate-300">M = ${M_kNm} kN·m = ${f(M_Nmm)} N·mm, y_max = ±h/2 = ±${yTop} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">σ_max = (M · y_max) / I = (${f(M_Nmm)} · ${yTop}) / (${I_mm4.toExponential(3)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">σ_max = <strong>±${f(maxSigma)} MPa</strong> (Tension bottom, Compression top)</p>
+            <p class="text-[11px] text-slate-500">At Neutral Axis (y = 0): σ = 0 MPa</p>
+          </div>
+        `;
+
+        step3 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-indigo-700 dark:text-indigo-400">Step 3: First Moment of Area at Neutral Axis (Q_max)</p>
+            <p class="text-slate-600 dark:text-slate-300">Q_na = A_half · ȳ_half = (b · h / 2) · (h / 4) = (b · h²) / 8</p>
+            <p class="text-slate-600 dark:text-slate-300">Q_na = (${b} · ${h}²) / 8 = (${b} · ${h * h}) / 8</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Q_max = <strong>${f(Q_na)} mm³</strong></p>
+          </div>
+        `;
+
+        step4 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Maximum Transverse Shear Stress (τ_max at N.A.)</p>
+            <p class="text-slate-600 dark:text-slate-300">V = ${V_kN} kN = ${f(V_N)} N, width at N.A. t = b = ${b} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">τ_max = (V · Q) / (I · t) = 1.5 · (V / A) = 1.5 · (${f(V_N)} / (${b * h}))</p>
+            <p class="font-semibold text-slate-900 dark:text-white">τ_max = <strong>${f(maxTau)} MPa</strong></p>
+            <p class="text-[11px] text-slate-500">Parabolic profile: τ = 0 at extreme fibers (y = ±h/2), peaking at neutral axis.</p>
+          </div>
+        `;
+      } else if (sectionType === 'Circular') {
+        const d = parseFloat(document.getElementById('d_circ').value) || 200;
+        const r = d / 2;
+        const Q_na = (2 / 3) * (r ** 3);
+
+        step1 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 1: Moment of Inertia (I_xx)</p>
+            <p class="text-slate-600 dark:text-slate-300">d = ${d} mm, r = ${r} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">I = (π · d⁴) / 64 = (π · ${d}⁴) / 64</p>
+            <p class="font-semibold text-slate-900 dark:text-white">I = <strong>${I_mm4.toExponential(4)} mm⁴</strong> = <strong>${I_m4.toExponential(4)} m⁴</strong></p>
+          </div>
+        `;
+
+        step2 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Maximum Bending Stress (σ_max)</p>
+            <p class="text-slate-600 dark:text-slate-300">M = ${M_kNm} kN·m = ${f(M_Nmm)} N·mm, y_max = ±r = ±${r} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">σ_max = (M · r) / I = (${f(M_Nmm)} · ${r}) / (${I_mm4.toExponential(3)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">σ_max = <strong>±${f(maxSigma)} MPa</strong></p>
+            <p class="text-[11px] text-slate-500">At Neutral Axis (y = 0): σ = 0 MPa</p>
+          </div>
+        `;
+
+        step3 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-indigo-700 dark:text-indigo-400">Step 3: First Moment of Area at Neutral Axis (Q_max)</p>
+            <p class="text-slate-600 dark:text-slate-300">Q_na = (2 / 3) · r³ = (2 / 3) · (${r})³</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Q_max = <strong>${f(Q_na)} mm³</strong></p>
+          </div>
+        `;
+
+        step4 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Maximum Transverse Shear Stress (τ_max at N.A.)</p>
+            <p class="text-slate-600 dark:text-slate-300">V = ${V_kN} kN = ${f(V_N)} N, width at N.A. t = d = ${d} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">τ_max = (V · Q) / (I · t) = (4/3) · (V / A) = (4/3) · (${f(V_N)} / (π·${r}²))</p>
+            <p class="font-semibold text-slate-900 dark:text-white">τ_max = <strong>${f(maxTau)} MPa</strong></p>
+            <p class="text-[11px] text-slate-500">Peak shear occurs at the neutral axis diameter.</p>
+          </div>
+        `;
+      } else {
+        const b = parseFloat(document.getElementById('b_ib').value) || 200;
+        const h = parseFloat(document.getElementById('h_ib').value) || 400;
+        const tf = parseFloat(document.getElementById('tf_ib').value) || 20;
+        const tw = parseFloat(document.getElementById('tw_ib').value) || 12;
+        const hw = h - 2 * tf;
+        const yTop = h / 2;
+        const Q_flange = b * tf * (h / 2 - tf / 2);
+        const Q_web_half = tw * (hw / 2) * (hw / 4);
+        const Q_na = Q_flange + Q_web_half;
+
+        step1 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-engineering-700 dark:text-engineering-400">Step 1: Moment of Inertia (I_xx via Parallel Axis / Subtraction)</p>
+            <p class="text-slate-600 dark:text-slate-300">b = ${b} mm, h = ${h} mm, tf = ${tf} mm, tw = ${tw} mm, hw = ${hw} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">I = [b·h³ − (b − tw)·hw³] / 12 = [${b}·(${h}³) − (${b - tw})·(${hw}³)] / 12</p>
+            <p class="font-semibold text-slate-900 dark:text-white">I = <strong>${I_mm4.toExponential(4)} mm⁴</strong> = <strong>${I_m4.toExponential(4)} m⁴</strong></p>
+          </div>
+        `;
+
+        step2 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-red-700 dark:text-red-400">Step 2: Maximum Bending Stress (σ_max at Extreme Flange Fiber)</p>
+            <p class="text-slate-600 dark:text-slate-300">M = ${M_kNm} kN·m = ${f(M_Nmm)} N·mm, y_max = ±h/2 = ±${yTop} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">σ_max = (M · y_max) / I = (${f(M_Nmm)} · ${yTop}) / (${I_mm4.toExponential(3)})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">σ_max = <strong>±${f(maxSigma)} MPa</strong></p>
+          </div>
+        `;
+
+        step3 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-indigo-700 dark:text-indigo-400">Step 3: First Moment of Area at Neutral Axis (Q_max)</p>
+            <p class="text-slate-600 dark:text-slate-300">Q_flange = b · tf · (h/2 − tf/2) = ${b} · ${tf} · ${yTop - tf / 2} = ${f(Q_flange)} mm³</p>
+            <p class="text-slate-600 dark:text-slate-300">Q_web_half = tw · (hw/2) · (hw/4) = ${tw} · ${hw / 2} · ${hw / 4} = ${f(Q_web_half)} mm³</p>
+            <p class="font-semibold text-slate-900 dark:text-white">Q_na = Q_flange + Q_web_half = <strong>${f(Q_na)} mm³</strong></p>
+          </div>
+        `;
+
+        step4 = `
+          <div class="p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-1">
+            <p class="font-bold text-green-700 dark:text-green-400">Step 4: Maximum Transverse Shear Stress (τ_max in Web at N.A.)</p>
+            <p class="text-slate-600 dark:text-slate-300">V = ${V_kN} kN = ${f(V_N)} N, web thickness t = tw = ${tw} mm</p>
+            <p class="text-slate-600 dark:text-slate-300">τ_max = (V · Q_na) / (I · tw) = (${f(V_N)} · ${f(Q_na)}) / (${I_mm4.toExponential(3)} · ${tw})</p>
+            <p class="font-semibold text-slate-900 dark:text-white">τ_max = <strong>${f(maxTau)} MPa</strong></p>
+            <p class="text-[11px] text-slate-500">Notice the sharp stress jump from flange into web due to the sudden width transition from b (${b}mm) to tw (${tw}mm).</p>
+          </div>
+        `;
+      }
+
+      container.innerHTML = step1 + step2 + step3 + step4;
     }
 
     function drawPlots(result) {
