@@ -144,8 +144,8 @@ export function renderFooter() {
   <footer class="bg-slate-900 dark:bg-slate-950 text-slate-400 py-10 px-4 border-t border-slate-800 mt-12">
     <div class="max-w-5xl mx-auto text-sm text-center space-y-2">
       <p class="text-white font-semibold text-base">An Integrated Python-Based Suite for Structural Analysis</p>
-      <p>Built by <strong class="text-white">Nagaraj Patil and Associates</strong> under the guidance of <strong class="text-white">Dr. M. M. Hanamasagar</strong></p>
-      <p class="text-slate-500">Major Project – 7th Semester, B.E. Civil Engineering · © 2024</p>
+      <p>Built by <strong class="text-white">Nagaraj Patil</strong> and Associates: <strong class="text-slate-200">Sanketkumar Anandayya Hiremath</strong>, <strong class="text-slate-200">Neha Jaganu Nayik</strong>, <strong class="text-slate-200">Srinivas Suresh Naik</strong> under the guidance of <strong class="text-white">Dr. M. M. Hanamasagar</strong></p>
+      <p class="text-slate-500">Major Project – 7th Semester, B.E. Civil Engineering · Basaveshwar Engineering College (Autonomous), Bagalkote · © 2026</p>
       <div class="flex flex-wrap justify-center gap-4 pt-2">
         <a href="index.html" class="hover:text-engineering-400 transition-colors">Home</a>
         <a href="module1.html" class="hover:text-engineering-400 transition-colors">Force System</a>

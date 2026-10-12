@@ -1,7 +1,7 @@
 # An Integrated Python-Based Suite for Structural Analysis
 
 > **Major Project – 7th Semester, B.E. Civil Engineering**  
-> Built by **Nagaraj Patil and Associates** under the guidance of **Dr. M. M. Hanamasagar**
+> Built by **Nagaraj Patil** and Associates (**Sanketkumar Anandayya Hiremath**, **Neha Jaganu Nayik**, **Srinivas Suresh Naik**) under the guidance of **Dr. M. M. Hanamasagar**
 
 ---
 
@@ -174,9 +174,11 @@ npm run deploy:vercel
 | Role | Name |
 |------|------|
 | **Project Lead & Developer** | Nagaraj Patil |
-| **Team** | Nagaraj Patil and Associates |
+| **Associates** | Sanketkumar Anandayya Hiremath<br/>Neha Jaganu Nayik<br/>Srinivas Suresh Naik |
 | **Faculty Guide** | Dr. M. M. Hanamasagar |
-| **Program** | B.E. Civil Engineering, 7th Semester |
+| **Institution** | Basaveshwar Engineering College (Autonomous), Bagalkote |
+| **Department** | Department of Civil Engineering |
+| **Program** | Major Project – 7th Semester, B.E. Civil Engineering |
 | **Year** | 2026 |
 
 ---
