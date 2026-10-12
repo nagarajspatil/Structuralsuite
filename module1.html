@@ -73,9 +73,14 @@
               <button id="btnDownload" class="text-xs bg-engineering-600 hover:bg-engineering-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">Download</button>
             </div>
           </div>
-          <div class="input-group">
-            <label class="input-label" for="numForces">Number of Forces (1 – 100)</label>
-            <input type="number" id="numForces" min="1" max="100" value="3" class="input-field w-32" />
+          <div class="space-y-3">
+            <div class="input-group">
+              <label class="input-label" for="numForces">Number of Forces (1 or more)</label>
+              <div class="flex gap-2">
+                <input type="number" id="numForces" min="1" value="3" class="input-field w-32" />
+                <button id="btnAddForce" class="text-xs bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-3 py-2 rounded-lg font-medium border border-slate-300 dark:border-slate-600 transition-colors">+ Add Force</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -99,8 +104,11 @@
               <div id="eq4"></div>
               <div id="eq5"></div>
               <div id="eq6"></div>
+              <div id="eq7"></div>
+              <div id="eq8"></div>
             </div>
             <p class="text-xs text-slate-500">Sign convention: moment M = x·Fy − y·Fx (counterclockwise positive). Angle measured counterclockwise from +x axis (0°–360°).</p>
+            <p class="text-xs text-amber-700 dark:text-amber-400 font-semibold">Varignon's Principle: M<sub>F1</sub> = d<sub>⊥</sub> · |R| = (x - x₁)ΣFy - (y - y₁)ΣFx.</p>
           </div>
         </div>
       </div>
@@ -137,14 +145,56 @@
             <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Resultant Moment about Origin (0,0)</p>
             <p id="res_moment" class="text-xl font-bold font-mono text-purple-700 dark:text-purple-400">— N·m</p>
           </div>
+
+          <!-- Varignon's Theorem: Position of Resultant with respect to Force 1 -->
+          <div class="mt-4 p-4 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-850 border border-amber-200 dark:border-amber-900/50">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400 flex items-center gap-1.5">
+                <span>📍 Varignon's Theorem (Position of Resultant wrt Force 1)</span>
+              </h3>
+              <span class="text-[10px] font-mono bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full font-semibold">Ref: Point F₁ (x₁, y₁)</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 mb-3">
+              Moment of Resultant about Force 1 application point equals algebraic sum of moments: 
+              <span class="font-mono font-semibold">M<sub>F1</sub> = d<sub>⊥</sub> · |R|</span>
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
+              <div class="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2.5 border border-amber-100 dark:border-slate-700">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">Moment about F₁ (M<sub>F1</sub>)</p>
+                <p id="res_varignon_m" class="text-base font-bold font-mono text-amber-700 dark:text-amber-400">—</p>
+                <p class="text-[10px] text-slate-400">N·m</p>
+              </div>
+              <div class="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2.5 border border-amber-100 dark:border-slate-700">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">Perpendicular Arm (d<sub>⊥</sub>)</p>
+                <p id="res_varignon_d" class="text-base font-bold font-mono text-engineering-700 dark:text-engineering-400">—</p>
+                <p class="text-[10px] text-slate-400">m from F₁</p>
+              </div>
+              <div class="bg-white/80 dark:bg-slate-900/80 rounded-lg p-2.5 border border-amber-100 dark:border-slate-700">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">Line of Action Point (x, y)</p>
+                <p id="res_varignon_pos" class="text-sm font-bold font-mono text-green-700 dark:text-green-400">—</p>
+                <p class="text-[10px] text-slate-400">closest point on line</p>
+              </div>
+            </div>
+            <div id="res_varignon_line" class="mt-2.5 text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-white/60 dark:bg-slate-900/60 p-2 rounded border border-amber-100 dark:border-slate-700">
+              Line of Action Equation: —
+            </div>
+          </div>
         </div>
 
         <!-- Plot -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-5">
-          <div class="flex items-center justify-between mb-3">
-            <h2 class="font-bold text-slate-900 dark:text-white">Force Vector Diagram</h2>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="font-bold text-slate-900 dark:text-white">Force Vector Diagram</h2>
+              <p id="arrowSubtitle" class="text-xs text-slate-500">Arrow heads point directly towards given (x, y) coordinates.</p>
+            </div>
+            <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg text-xs self-start sm:self-auto border border-slate-200 dark:border-slate-700">
+              <span class="text-slate-500 px-1 font-medium">Arrow Style:</span>
+              <button id="arrowDirHead" type="button" class="px-2.5 py-1 rounded-md font-semibold transition-all bg-engineering-600 text-white shadow-sm">Head at (x, y)</button>
+              <button id="arrowDirTail" type="button" class="px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all">Tail at (x, y)</button>
+            </div>
           </div>
-          <div id="forcePlot" class="w-full" style="height: 420px;"></div>
+          <div id="forcePlot" class="w-full" style="height: 520px;"></div>
         </div>
 
         <!-- Step-by-step panel -->
@@ -192,6 +242,8 @@
       ['eq4', '\\Sigma F_y = \\sum_{i=1}^{n} F_{yi}'],
       ['eq5', 'R = \\sqrt{(\\Sigma F_x)^2 + (\\Sigma F_y)^2}'],
       ['eq6', 'M_O = \\sum_{i=1}^{n}(x_i F_{yi} - y_i F_{xi})'],
+      ['eq7', 'M_{F1} = \\sum_{i=1}^{n} \\big[(x_i - x_1)F_{yi} - (y_i - y_1)F_{xi}\\big]'],
+      ['eq8', 'd_\\perp = \\frac{|M_{F1}|}{|R|}, \\quad (x - x_1)\\Sigma F_y - (y - y_1)\\Sigma F_x = M_{F1}'],
     ];
     eqs.forEach(([id, latex]) => {
       const el = document.getElementById(id);
@@ -200,6 +252,7 @@
 
     // ── State ─────────────────────────────────────────────────────────────────
     let forces = [];
+    let arrowMode = 'head'; // 'head' = arrowhead points towards (x, y) coordinates; 'tail' = tail at (x, y)
     const DEFAULT_FORCES = [
       { mag: 100, angle: 30, x: 2, y: 1 },
       { mag: 150, angle: 120, x: -1, y: 3 },
@@ -209,50 +262,89 @@
     // ── Build force rows ──────────────────────────────────────────────────────
     function buildForceRows(n) {
       const container = document.getElementById('forceRows');
-        container.innerHTML = '';
+      container.innerHTML = '';
       forces = [];
       for (let i = 0; i < n; i++) {
         const def = DEFAULT_FORCES[i] || { mag: 50, angle: (i * 45) % 360, x: 0, y: 0 };
         forces.push({ ...def });
-        container.insertAdjacentHTML('beforeend', `
-          <div class="force-row" id="forceRow_${i}">
-            <div class="flex items-center justify-between mb-3">
-              <span class="text-sm font-bold text-engineering-700 dark:text-engineering-400 bg-engineering-50 dark:bg-engineering-900/30 px-2.5 py-1 rounded-full">F${i + 1}</span>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="input-group">
-                <label class="input-label">Magnitude (N)</label>
-                <input type="number" id="mag_${i}" value="${def.mag}" min="-1000" max="1000" step="1" class="input-field" />
-              </div>
-              <div class="input-group">
-                <label class="input-label">Angle (°)</label>
-                <input type="number" id="ang_${i}" value="${def.angle}" min="0" max="360" step="1" class="input-field" />
-              </div>
-              <div class="input-group">
-                <label class="input-label">X-position (m)</label>
-                <input type="number" id="x_${i}" value="${def.x}" min="-10" max="10" step="0.1" class="input-field" />
-              </div>
-              <div class="input-group">
-                <label class="input-label">Y-position (m)</label>
-                <input type="number" id="y_${i}" value="${def.y}" min="-10" max="10" step="0.1" class="input-field" />
-              </div>
-            </div>
-          </div>`);
-
-        // Listen for input changes on each field
-        const fieldMap = { mag: 'mag', ang: 'angle', x: 'x', y: 'y' };
-        ['mag', 'ang', 'x', 'y'].forEach(field => {
-          document.getElementById(`${field}_${i}`).addEventListener('input', e => {
-            const val = parseFloat(e.target.value);
-            if (!isNaN(val)) {
-              forces[i][fieldMap[field]] = val;
-              debouncedUpdate();
-            }
-          });
-        });
+        appendForceRowElement(i, def);
       }
       updatePlot();
     }
+
+    function appendForceRowElement(i, def) {
+      const container = document.getElementById('forceRows');
+      const rowHtml = `
+        <div class="force-row" id="forceRow_${i}">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-bold text-engineering-700 dark:text-engineering-400 bg-engineering-50 dark:bg-engineering-900/30 px-2.5 py-1 rounded-full">F${i + 1}</span>
+              ${i === 0 ? '<span class="text-[10px] bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded font-semibold">Reference Force (Varignon)</span>' : ''}
+            </div>
+            ${i >= 1 ? `<button class="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded" onclick="removeForceRow(${i})">Remove</button>` : ''}
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="input-group">
+              <label class="input-label">Magnitude (N)</label>
+              <input type="number" id="mag_${i}" value="${def.mag}" step="1" class="input-field" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Angle (°)</label>
+              <input type="number" id="ang_${i}" value="${def.angle}" min="0" max="360" step="1" class="input-field" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">X-position (m)</label>
+              <input type="number" id="x_${i}" value="${def.x}" step="0.1" class="input-field" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">Y-position (m)</label>
+              <input type="number" id="y_${i}" value="${def.y}" step="0.1" class="input-field" />
+            </div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', rowHtml);
+
+      // Listen for input changes on each field
+      const fieldMap = { mag: 'mag', ang: 'angle', x: 'x', y: 'y' };
+      ['mag', 'ang', 'x', 'y'].forEach(field => {
+        document.getElementById(`${field}_${i}`).addEventListener('input', e => {
+          const val = parseFloat(e.target.value);
+          if (!isNaN(val)) {
+            forces[i][fieldMap[field]] = val;
+            debouncedUpdate();
+          }
+        });
+      });
+    }
+
+    window.removeForceRow = function(index) {
+      if (forces.length <= 1) return;
+      forces.splice(index, 1);
+      document.getElementById('numForces').value = forces.length;
+      rebuildFromForcesArray();
+    };
+
+    function rebuildFromForcesArray() {
+      const container = document.getElementById('forceRows');
+      container.innerHTML = '';
+      const current = [...forces];
+      forces = [];
+      for (let i = 0; i < current.length; i++) {
+        forces.push(current[i]);
+        appendForceRowElement(i, current[i]);
+      }
+      updatePlot();
+    }
+
+    // ── Add Force Button ──────────────────────────────────────────────────────
+    document.getElementById('btnAddForce').addEventListener('click', () => {
+      const i = forces.length;
+      const def = { mag: 50, angle: (i * 45) % 360, x: 0, y: 0 };
+      forces.push(def);
+      document.getElementById('numForces').value = forces.length;
+      appendForceRowElement(i, def);
+      updatePlot();
+    });
 
     // ── Debounce ──────────────────────────────────────────────────────────────
     let debTimer;
@@ -261,7 +353,7 @@
     // ── num forces input ──────────────────────────────────────────────────────
     const numInput = document.getElementById('numForces');
     numInput.addEventListener('input', e => {
-      const n = Math.min(100, Math.max(1, parseInt(e.target.value) || 1));
+      const n = Math.max(1, parseInt(e.target.value) || 1);
       buildForceRows(n);
     });
 
@@ -274,13 +366,37 @@
         limit
       );
 
-      // Update result cards
+      // Update basic result cards
       const f = (n, d = 2) => (Math.abs(n) < 1e-9 ? '0' : parseFloat(n.toFixed(d)).toString());
       document.getElementById('res_sumFx').textContent = f(result.sumFx, 2);
       document.getElementById('res_sumFy').textContent = f(result.sumFy, 2);
       document.getElementById('res_mag').textContent = f(result.resMag, 2);
       document.getElementById('res_angle').textContent = f(result.resAngle, 1) + '°';
       document.getElementById('res_moment').textContent = f(result.sumM, 2) + ' N·m';
+
+      // Update Varignon Resultant Position with respect to Force 1
+      const v = result.varignon;
+      if (v) {
+        document.getElementById('res_varignon_m').textContent = `${f(v.sumMA, 2)}`;
+        if (v.isPureCouple) {
+          document.getElementById('res_varignon_d').textContent = 'Undefined (|R|=0)';
+          document.getElementById('res_varignon_pos').textContent = 'Pure Couple';
+          document.getElementById('res_varignon_line').innerHTML = `<strong>Pure Couple System:</strong> Resultant force is zero (|R| = 0). System produces a net couple of <strong>${f(v.sumMA, 2)} N·m</strong>.`;
+        } else {
+          document.getElementById('res_varignon_d').textContent = `${f(v.dPerp, 3)} m`;
+          document.getElementById('res_varignon_pos').textContent = `(${f(v.closestX, 2)}, ${f(v.closestY, 2)}) m`;
+
+          let eqText = `Line of Action: `;
+          eqText += `(x - ${f(v.pointA.x, 2)})·(${f(result.sumFy, 2)}) - (y - ${f(v.pointA.y, 2)})·(${f(result.sumFx, 2)}) = ${f(v.sumMA, 2)} N·m`;
+          if (v.deltaX !== null) {
+            eqText += ` | Rel x-intercept: Δx = ${f(v.deltaX, 2)} m (at y = ${f(v.pointA.y, 1)} m)`;
+          }
+          if (v.deltaY !== null) {
+            eqText += ` | Rel y-intercept: Δy = ${f(v.deltaY, 2)} m (at x = ${f(v.pointA.x, 1)} m)`;
+          }
+          document.getElementById('res_varignon_line').innerHTML = eqText;
+        }
+      }
 
       // Build Plotly traces
       const isDark = false;
@@ -289,67 +405,161 @@
       const textColor = isDark ? '#94a3b8' : '#475569';
 
       const traceArrows = [];
-      const blues = ['#3b82f6', '#60a5fa', '#2563eb', '#93c5fd', '#1d4ed8'];
+      const blues = ['#2563eb', '#0284c7', '#0d9488', '#4f46e5', '#7c3aed', '#059669', '#d97706'];
+
+      // Trace: Force application / target coordinates with coordinate labels
+      traceArrows.push({
+        type: 'scatter',
+        mode: 'markers+text',
+        x: result.details.map(d => d.x),
+        y: result.details.map(d => d.y),
+        text: result.details.map(d => `(${f(d.x, 1)}, ${f(d.y, 1)})`),
+        textposition: arrowMode === 'head' ? 'top center' : 'bottom center',
+        textfont: { size: 10, color: '#334155' },
+        marker: { size: 8, color: '#0f172a', symbol: 'circle', line: { color: '#ffffff', width: 1.5 } },
+        name: 'Coordinates (x, y)',
+        hoverinfo: 'text',
+        hovertext: result.details.map(d => `F${d.index} coordinate: (${f(d.x, 2)}, ${f(d.y, 2)}) m`),
+      });
 
       for (const d of result.details) {
         const dx = d.fx / scale, dy = d.fy / scale;
-        const tx = d.x + dx * 0.5, ty = d.y + dy * 0.5;
-        // arrow shaft
+        const color = blues[(d.index - 1) % blues.length];
+        
+        // When arrowMode === 'head', arrow head points towards (d.x, d.y) and tail is at (d.x - dx, d.y - dy)
+        // When arrowMode === 'tail', arrow tail is at (d.x, d.y) and head points to (d.x + dx, d.y + dy)
+        const tailX = (arrowMode === 'head') ? d.x - dx : d.x;
+        const tailY = (arrowMode === 'head') ? d.y - dy : d.y;
+        const headX = (arrowMode === 'head') ? d.x : d.x + dx;
+        const headY = (arrowMode === 'head') ? d.y : d.y + dy;
+        const labelX = (arrowMode === 'head') ? d.x - dx * 0.55 : d.x + dx * 0.7;
+        const labelY = (arrowMode === 'head') ? d.y - dy * 0.55 : d.y + dy * 0.7;
+
+        // Force arrow shaft
         traceArrows.push({
           type: 'scatter', mode: 'lines',
-          x: [d.x, d.x + dx], y: [d.y, d.y + dy],
-          line: { color: blues[(d.index - 1) % blues.length], width: 2 },
-          opacity: 0.7, showlegend: false, hoverinfo: 'skip',
+          x: [tailX, headX], y: [tailY, headY],
+          line: { color, width: 2.5 },
+          opacity: 0.9,
+          name: `F${d.index}: ${f(d.mag)}N @ ${f(d.angle, 0)}° at (${f(d.x, 1)}, ${f(d.y, 1)})m`,
+          hoverinfo: 'name',
         });
-        // annotation for the label
+
+        // Label along arrow shaft indicating Force index and Magnitude
         traceArrows.push({
           type: 'scatter', mode: 'text',
-          x: [tx], y: [ty],
-          text: [`<b>F${d.index}</b>`],
-          textfont: { color: blues[(d.index - 1) % blues.length], size: 12 },
-          showlegend: false, hoverinfo: 'text',
-          hovertext: [`F${d.index}: ${f(d.mag)}N @ ${f(d.angle, 1)}° at (${f(d.x, 1)}, ${f(d.y, 1)})m`],
+          x: [labelX], y: [labelY],
+          text: [`<b>F${d.index} (${f(d.mag)}N)</b>`],
+          textfont: { color, size: 11 },
+          showlegend: false, hoverinfo: 'skip',
         });
       }
 
-      // Resultant
+      // Resultant from origin
       const rdx = result.sumFx / scale, rdy = result.sumFy / scale;
       traceArrows.push({
         type: 'scatter', mode: 'lines',
         x: [0, rdx], y: [0, rdy],
-        line: { color: '#ef4444', width: 3 },
-        name: `Resultant: ${f(result.resMag, 1)}N @ ${f(result.resAngle, 1)}°`,
+        line: { color: '#dc2626', width: 3.5 },
+        name: `Resultant R: ${f(result.resMag, 1)}N @ ${f(result.resAngle, 1)}°`,
+        hoverinfo: 'name',
       });
       traceArrows.push({
         type: 'scatter', mode: 'text',
-        x: [rdx * 0.5], y: [rdy * 0.5],
-        text: ['<b>R</b>'],
-        textfont: { color: '#ef4444', size: 13 },
+        x: [rdx * 0.6], y: [rdy * 0.6],
+        text: [`<b>R (${f(result.resMag, 1)}N)</b>`],
+        textfont: { color: '#dc2626', size: 12 },
         showlegend: false, hoverinfo: 'skip',
       });
 
+      // Highlight Force 1 application point as Varignon reference
+      if (forces.length > 0) {
+        const f1 = forces[0];
+        traceArrows.push({
+          type: 'scatter', mode: 'markers+text',
+          x: [f1.x], y: [f1.y],
+          marker: { size: 10, color: '#f59e0b', symbol: 'diamond', line: { color: '#b45309', width: 2 } },
+          text: ['<b>F₁ Reference</b>'],
+          textposition: 'top left',
+          textfont: { color: '#b45309', size: 11 },
+          name: 'Force 1 App Point (x₁, y₁)',
+          hoverinfo: 'text',
+          hovertext: [`F₁ Reference Point: (${f(f1.x, 2)}, ${f(f1.y, 2)}) m`],
+        });
+      }
+
+      // Line of action of resultant and perpendicular lever arm wrt Force 1
+      if (v && !v.isPureCouple && result.resMag > 1e-9) {
+        // Plot line of action of resultant passing through closest point (v.closestX, v.closestY)
+        const lineLen = limit * 2;
+        const cosR = result.sumFx / result.resMag;
+        const sinR = result.sumFy / result.resMag;
+        const lx0 = v.closestX - cosR * lineLen;
+        const ly0 = v.closestY - sinR * lineLen;
+        const lx1 = v.closestX + cosR * lineLen;
+        const ly1 = v.closestY + sinR * lineLen;
+
+        traceArrows.push({
+          type: 'scatter', mode: 'lines',
+          x: [lx0, lx1], y: [ly0, ly1],
+          line: { color: '#ea580c', width: 1.5, dash: 'dot' },
+          name: 'Line of Action of R',
+          hoverinfo: 'name',
+        });
+
+        // Perpendicular lever arm connecting F1 (x1, y1) to line of action (closest point)
+        traceArrows.push({
+          type: 'scatter', mode: 'lines+markers',
+          x: [v.pointA.x, v.closestX], y: [v.pointA.y, v.closestY],
+          line: { color: '#8b5cf6', width: 2, dash: 'dash' },
+          marker: { size: 6, color: '#8b5cf6' },
+          name: `Lever arm d = ${f(v.dPerp, 2)}m`,
+          hoverinfo: 'name',
+        });
+
+        // Marker for closest point on line of action
+        traceArrows.push({
+          type: 'scatter', mode: 'markers+text',
+          x: [v.closestX], y: [v.closestY],
+          marker: { size: 8, color: '#ea580c', symbol: 'cross' },
+          text: [`<b>P_R (${f(v.closestX, 1)}, ${f(v.closestY, 1)})</b>`],
+          textposition: 'bottom right',
+          textfont: { color: '#ea580c', size: 10 },
+          showlegend: false,
+          hoverinfo: 'text',
+          hovertext: [`Closest point on Line of Action: (${f(v.closestX, 2)}, ${f(v.closestY, 2)}) m`],
+        });
+      }
+
       // Arrow heads as annotation markers
-      const annotations = result.details.map(d => ({
-        x: d.x + d.fx / scale, y: d.y + d.fy / scale, xref: 'x', yref: 'y',
-        ax: d.x, ay: d.y, axref: 'x', ayref: 'y',
-        showarrow: true, arrowhead: 3, arrowsize: 1.5,
-        arrowcolor: blues[(d.index - 1) % blues.length],
-        arrowwidth: 2, opacity: 0.8,
-      }));
+      const annotations = result.details.map(d => {
+        const dx = d.fx / scale, dy = d.fy / scale;
+        const headX = (arrowMode === 'head') ? d.x : d.x + dx;
+        const headY = (arrowMode === 'head') ? d.y : d.y + dy;
+        const tailX = (arrowMode === 'head') ? d.x - dx : d.x;
+        const tailY = (arrowMode === 'head') ? d.y - dy : d.y;
+        return {
+          x: headX, y: headY, xref: 'x', yref: 'y',
+          ax: tailX, ay: tailY, axref: 'x', ayref: 'y',
+          showarrow: true, arrowhead: 3, arrowsize: 1.6,
+          arrowcolor: blues[(d.index - 1) % blues.length],
+          arrowwidth: 2.5, opacity: 0.95,
+        };
+      });
       annotations.push({
         x: rdx, y: rdy, xref: 'x', yref: 'y',
         ax: 0, ay: 0, axref: 'x', ayref: 'y',
-        showarrow: true, arrowhead: 3, arrowsize: 2,
-        arrowcolor: '#ef4444', arrowwidth: 2.5,
+        showarrow: true, arrowhead: 3, arrowsize: 2.2,
+        arrowcolor: '#dc2626', arrowwidth: 3.2,
       });
 
       Plotly.react('forcePlot', traceArrows, {
         paper_bgcolor: plotBg, plot_bgcolor: plotBg,
         font: { family: 'Inter, sans-serif', color: textColor, size: 12 },
-        xaxis: { range: [-limit, limit], gridcolor: gridColor, zerolinecolor: textColor, title: 'X (m)', zeroline: true },
-        yaxis: { range: [-limit, limit], gridcolor: gridColor, zerolinecolor: textColor, title: 'Y (m)', scaleanchor: 'x', scaleratio: 1, zeroline: true },
-        legend: { bgcolor: isDark ? '#1e293b' : '#f8fafc', bordercolor: isDark ? '#334155' : '#e2e8f0', borderwidth: 1 },
-        margin: { t: 20, b: 50, l: 60, r: 20 },
+        xaxis: { range: [-limit, limit], gridcolor: gridColor, zerolinecolor: textColor, title: 'X (meters)', zeroline: true },
+        yaxis: { range: [-limit, limit], gridcolor: gridColor, zerolinecolor: textColor, title: 'Y (meters)', scaleanchor: 'x', scaleratio: 1, zeroline: true },
+        legend: { bgcolor: isDark ? '#1e293b' : '#f8fafc', bordercolor: isDark ? '#334155' : '#e2e8f0', borderwidth: 1, orientation: 'h', y: -0.18 },
+        margin: { t: 25, b: 70, l: 60, r: 25 },
         annotations,
         hovermode: 'closest',
       }, { responsive: true });
@@ -364,16 +574,42 @@
             <p class="text-engineering-700 dark:text-engineering-400 font-bold">F${d.index}: mag=${f(d.mag)}N, θ=${f(d.angle, 1)}°, pos=(${f(d.x, 1)}, ${f(d.y, 1)})m</p>
             <p>F<sub>x</sub> = ${f(d.mag)}·cos(${f(d.angle, 1)}°) = <strong>${f(d.fx, 3)}</strong> N</p>
             <p>F<sub>y</sub> = ${f(d.mag)}·sin(${f(d.angle, 1)}°) = <strong>${f(d.fy, 3)}</strong> N</p>
-            <p>M = (${f(d.x, 1)} × ${f(d.fy, 3)}) − (${f(d.y, 1)} × ${f(d.fx, 3)}) = <strong>${f(d.momentContrib, 3)}</strong> N·m</p>
-            <p class="text-slate-500">Running total M = <strong class="text-purple-600 dark:text-purple-400">${f(runningM, 3)}</strong> N·m</p>
+            <p>M<sub>O</sub> = (${f(d.x, 1)} × ${f(d.fy, 3)}) − (${f(d.y, 1)} × ${f(d.fx, 3)}) = <strong>${f(d.momentContrib, 3)}</strong> N·m</p>
+            <p class="text-slate-500">Running total M<sub>O</sub> = <strong class="text-purple-600 dark:text-purple-400">${f(runningM, 3)}</strong> N·m</p>
           </div>`;
       }
+
+      // Varignon's Theorem step-by-step breakdown
+      if (v) {
+        html_steps += `
+          <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-lg p-3 text-xs space-y-1.5">
+            <p class="font-bold text-amber-800 dark:text-amber-300">📍 Varignon's Theorem Step-by-Step (Position of Resultant wrt Force 1)</p>
+            <p>Reference point A is Force 1 application point: <strong>(x₁, y₁) = (${f(v.pointA.x, 2)}, ${f(v.pointA.y, 2)}) m</strong></p>
+            <p>Algebraic sum of moments of all forces about Point A:</p>
+            <p class="font-mono text-[11px] bg-white/70 dark:bg-slate-900/70 p-1.5 rounded">
+              M<sub>F1</sub> = Σ [(x<sub>i</sub> - x₁)·F<sub>yi</sub> - (y<sub>i</sub> - y₁)·F<sub>xi</sub>] = <strong>${f(v.sumMA, 3)} N·m</strong>
+            </p>`;
+        if (!v.isPureCouple && result.resMag > 1e-9) {
+          html_steps += `
+            <p>By Varignon's Theorem: Moment of resultant R about point A equals M<sub>F1</sub>:</p>
+            <p class="font-mono text-[11px] bg-white/70 dark:bg-slate-900/70 p-1.5 rounded">
+              |R| · d<sub>⊥</sub> = |M<sub>F1</sub>| &implies; d<sub>⊥</sub> = |${f(v.sumMA, 3)}| / ${f(result.resMag, 3)} = <strong>${f(v.dPerp, 4)} m</strong>
+            </p>
+            <p>Line of Action Equation: (x - ${f(v.pointA.x, 2)})·(${f(result.sumFy, 2)}) - (y - ${f(v.pointA.y, 2)})·(${f(result.sumFx, 2)}) = ${f(v.sumMA, 2)}</p>
+            <p>Closest point on the Line of Action to F₁: <strong>(${f(v.closestX, 3)}, ${f(v.closestY, 3)}) m</strong></p>
+            ${v.deltaX !== null ? `<p>Horizontal distance from F₁ to line of action (at y = ${f(v.pointA.y, 1)} m): <strong>Δx = ${f(v.deltaX, 3)} m</strong></p>` : ''}
+            ${v.deltaY !== null ? `<p>Vertical distance from F₁ to line of action (at x = ${f(v.pointA.x, 1)} m): <strong>Δy = ${f(v.deltaY, 3)} m</strong></p>` : ''}`;
+        }
+        html_steps += `</div>`;
+      }
+
       html_steps += `
         <div class="bg-engineering-50 dark:bg-engineering-900/30 rounded-lg p-3 text-xs border border-engineering-200 dark:border-engineering-700">
           <p class="font-bold text-engineering-800 dark:text-engineering-300">Summary</p>
           <p>ΣFx = <strong>${f(result.sumFx, 3)}</strong> N &nbsp;|&nbsp; ΣFy = <strong>${f(result.sumFy, 3)}</strong> N</p>
           <p>|R| = <strong>${f(result.resMag, 3)}</strong> N &nbsp;|&nbsp; θR = <strong>${f(result.resAngle, 2)}°</strong></p>
-          <p>ΣM = <strong>${f(result.sumM, 3)}</strong> N·m</p>
+          <p>ΣM<sub>O</sub> = <strong>${f(result.sumM, 3)}</strong> N·m</p>
+          ${v ? `<p>Varignon Arm wrt F₁: <strong>d<sub>⊥</sub> = ${f(v.dPerp, 3)} m</strong> (M<sub>F1</sub> = ${f(v.sumMA, 2)} N·m)</p>` : ''}
         </div>`;
       document.getElementById('stepsContent').innerHTML = html_steps;
     }
@@ -388,7 +624,18 @@
     document.getElementById('btnDownload').addEventListener('click', () => {
       const result = analyzeForces(forces);
       // Download JSON
-      const data = { forces, results: { sumFx: result.sumFx, sumFy: result.sumFy, resMag: result.resMag, resAngle: result.resAngle, sumM: result.sumM }, details: result.details };
+      const data = { 
+        forces, 
+        results: { 
+          sumFx: result.sumFx, 
+          sumFy: result.sumFy, 
+          resMag: result.resMag, 
+          resAngle: result.resAngle, 
+          sumM: result.sumM,
+          varignonWrtF1: result.varignon
+        }, 
+        details: result.details 
+      };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'force_analysis.json'; a.click();
@@ -396,6 +643,28 @@
       // Download plot
       setTimeout(() => Plotly.downloadImage('forcePlot', { format: 'png', filename: 'force_diagram', width: 1200, height: 900 }), 200);
     });
+
+    // ── Arrow Direction Toggle ───────────────────────────────────────────────
+    const btnHead = document.getElementById('arrowDirHead');
+    const btnTail = document.getElementById('arrowDirTail');
+    if (btnHead && btnTail) {
+      btnHead.addEventListener('click', () => {
+        arrowMode = 'head';
+        btnHead.className = 'px-2.5 py-1 rounded-md font-semibold transition-all bg-engineering-600 text-white shadow-sm';
+        btnTail.className = 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all';
+        const sub = document.getElementById('arrowSubtitle');
+        if (sub) sub.textContent = 'Arrow heads point directly towards given (x, y) coordinates.';
+        updatePlot();
+      });
+      btnTail.addEventListener('click', () => {
+        arrowMode = 'tail';
+        btnTail.className = 'px-2.5 py-1 rounded-md font-semibold transition-all bg-engineering-600 text-white shadow-sm';
+        btnHead.className = 'px-2.5 py-1 rounded-md font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all';
+        const sub = document.getElementById('arrowSubtitle');
+        if (sub) sub.textContent = 'Arrow tails start at given (x, y) coordinates and point outward.';
+        updatePlot();
+      });
+    }
 
     // ── Init ──────────────────────────────────────────────────────────────────
     buildForceRows(3);
